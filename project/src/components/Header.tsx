@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link, NavLink } from 'react-router-dom';
 import { Menu, Instagram, ShoppingCart } from 'lucide-react';
 
 interface HeaderProps {
@@ -10,6 +11,11 @@ interface HeaderProps {
 }
 
 export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, cartItemCount, isVisible }: HeaderProps) {
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50 ${
+      isActive ? 'text-purple-600 bg-purple-100' : ''
+    }`;
+
   return (
     <header 
       className={`bg-white shadow-lg sticky top-0 z-50 transition-transform duration-300 ${
@@ -18,26 +24,29 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, cartIt
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2">
             <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
               S
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               SkipIT
             </span>
-          </div>
+          </Link>
 
           {/* Navigation */}
           <nav className="hidden lg:flex items-center space-x-6">
-            <a href="#quienes-somos" className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
-              Quiénes Somos
-            </a>
-            <a href="#eventos" className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
+            <NavLink to="/" className={navLinkClass}>
+              Inicio
+            </NavLink>
+            <NavLink to="/events" className={navLinkClass}>
               Eventos
-            </a>
-            <a href="#contacto" className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
-              Contacto
-            </a>
+            </NavLink>
+            <Link to="/" state={{ scrollTo: '#quienes-somos' }} className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
+              Quiénes Somos
+            </Link>
+            <Link to="/" state={{ scrollTo: '#como-funciona' }} className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
+              Cómo Funciona
+            </Link>
             <a 
               href="https://instagram.com/skipit" 
               target="_blank" 
@@ -72,36 +81,6 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, cartIt
               </button>
             </div>
           </div>
-        </div>
-        
-        {/* Mobile Navigation Menu - Hidden by default, would be toggled with state */}
-        <div className="lg:hidden border-t border-gray-200 py-4 hidden">
-          <nav className="flex flex-col space-y-3">
-            <a href="#quienes-somos" className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
-              Quiénes Somos
-            </a>
-            <a href="#eventos" className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
-              Eventos
-            </a>
-            <a href="#contacto" className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
-              Contacto
-            </a>
-            <button onClick={onOpenLogin} className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50 w-full text-left">
-              Inicia Sesión
-            </button>
-            <button onClick={onOpenRegister} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-4 py-2 rounded-full transition-all duration-300 text-center w-full">
-              Regístrate
-            </button>
-            <a 
-              href="https://instagram.com/skipit" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-gray-700 hover:text-pink-600 transition-colors px-3 py-2 rounded-lg hover:bg-pink-50 flex items-center space-x-2"
-            >
-              <Instagram className="w-5 h-5" />
-              <span>Instagram</span>
-            </a>
-          </nav>
         </div>
       </div>
     </header>
