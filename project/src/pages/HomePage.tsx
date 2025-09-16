@@ -9,9 +9,10 @@ import { Event } from '../data/mockData';
 interface HomePageProps {
   events: Event[];
   onSelectEvent: (event: Event) => void;
+  onOpenRegister: () => void;
 }
 
-export default function HomePage({ events, onSelectEvent }: HomePageProps) {
+export default function HomePage({ events, onSelectEvent, onOpenRegister }: HomePageProps) {
   const location = useLocation();
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function HomePage({ events, onSelectEvent }: HomePageProps) {
   return (
     <>
       <Hero />
-      <QuienesSomos />
+      <QuienesSomos onOpenRegister={onOpenRegister} />
       <section id="eventos" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">

@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  /* Estilos para navegadores Webkit (Chrome, Safari, etc.) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent; /* Invisible por defecto */
+    border-radius: 0;
+    border: none;
+  }
+
+  /* Hace el scrollbar visible y más opaco solo al pasar el ratón directamente sobre el thumb */
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  /* Para Firefox y IE/Edge */
+  .custom-scrollbar {
+    scrollbar-width: none; /* Oculta el scrollbar completamente en Firefox */
+    -ms-overflow-style: none; /* Oculta el scrollbar en IE/Edge */
+  }
+}

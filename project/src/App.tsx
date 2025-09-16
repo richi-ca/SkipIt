@@ -117,13 +117,13 @@ function App() {
 
             <main>
               <Routes>
-                <Route path="/" element={<HomePage events={events} onSelectEvent={setSelectedEvent} />} />
+                <Route path="/" element={<HomePage events={events} onSelectEvent={setSelectedEvent} onOpenRegister={() => setIsRegisterOpen(true)} />} />
                 <Route path="/events" element={<EventsPage onSelectEvent={setSelectedEvent} />} />
               </Routes>
             </main>
 
             <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onSwitchToRegister={() => { setIsLoginOpen(false); setIsRegisterOpen(true); }} />
-            <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} />
+            <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} onSwitchToLogin={() => { setIsRegisterOpen(false); setIsLoginOpen(true); }} />
             
             {selectedEvent && (
               <DrinkMenu

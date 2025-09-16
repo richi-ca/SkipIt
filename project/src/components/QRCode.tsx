@@ -30,7 +30,7 @@ export default function QRCode({ isOpen, onClose, orderNumber, eventName, total,
         </div>
 
         {/* QR Code */}
-        <div className="p-6 text-center">
+        <div className="p-6 text-center max-h-[605px] overflow-y-auto custom-scrollbar">
           <div className="bg-gray-100 p-8 rounded-2xl mb-6">
             <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg mx-auto flex items-center justify-center">
               {/* Mock QR Code - En implementación real usar librería de QR */}

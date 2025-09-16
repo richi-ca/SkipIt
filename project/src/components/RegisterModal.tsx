@@ -5,9 +5,10 @@ import TermsModal from './TermsModal';
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSwitchToLogin: () => void;
 }
 
-export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
+export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: RegisterModalProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -62,7 +63,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-6 max-h-[605px] overflow-y-auto custom-scrollbar">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
             ¡Únete a SkipIT!
           </h2>
@@ -209,7 +210,13 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               ¿Ya tienes cuenta?{' '}
-              <button className="text-purple-600 hover:text-purple-700 font-medium">
+              <button 
+                onClick={() => {
+                  onClose();
+                  onSwitchToLogin();
+                }}
+                className="text-purple-600 hover:text-purple-700 font-medium"
+              >
                 Inicia sesión aquí
               </button>
             </p>

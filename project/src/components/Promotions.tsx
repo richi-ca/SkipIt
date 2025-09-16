@@ -98,7 +98,7 @@ export default function Promotions() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8" id="concursos">
           {contests.map((contest) => (
-            <div key={contest.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300">
+            <div key={contest.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
               <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <Trophy className="w-8 h-8" />

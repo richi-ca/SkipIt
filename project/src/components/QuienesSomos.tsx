@@ -1,7 +1,11 @@
 import React from 'react';
 import { Clock, Users, Zap, Heart, Trophy, Smartphone } from 'lucide-react';
 
-export default function QuienesSomos() {
+interface QuienesSomosProps {
+  onOpenRegister: () => void;
+}
+
+export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
   return (
     <section id="quienes-somos" className="py-20 bg-gradient-to-br from-purple-50 to-pink-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -124,15 +128,15 @@ export default function QuienesSomos() {
               Únete a miles de personas que ya disfrutan más y esperan menos
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="/register"
+              <button
+                onClick={onOpenRegister}
                 className="bg-white text-purple-600 hover:bg-gray-100 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
                 Regístrate Gratis
-              </a>
+              </button>
               <a
                 href="#eventos"
-                className="border-2 border-white text-white hover:bg-white hover:text-purple-600 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300"
+                className="border-2 border-white text-white hover:bg-white hover:text-purple-600 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 hover:scale-105"
               >
                 Ver Eventos
               </a>

@@ -57,7 +57,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
         </div>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-6 max-h-[605px] overflow-y-auto custom-scrollbar">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
             ¡Bienvenido de vuelta!
           </h2>
