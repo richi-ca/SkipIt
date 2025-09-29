@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { X, Download, Share } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface QRCodeProps {
   isOpen: boolean;
@@ -12,6 +13,36 @@ interface QRCodeProps {
 
 export default function QRCode({ isOpen, onClose, orderNumber, eventName, total, drinks }: QRCodeProps) {
   if (!isOpen) return null;
+
+  const qrRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = () => {
+    const canvas = qrRef.current?.querySelector('canvas');
+    if (canvas) {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `QR_Pedido_${orderNumber}.png`;
+      link.click();
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `Mi Pedido SkipIt: #${orderNumber}`,
+      text: `¡Listo para retirar mi pedido #${orderNumber} en ${eventName}!`,
+      url: window.location.href
+    };
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        alert("La función de compartir no está soportada en este navegador.");
+      }
+    } catch (error) {
+      console.error("Error al compartir:", error);
+      alert("Hubo un error al intentar compartir.");
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -32,16 +63,15 @@ export default function QRCode({ isOpen, onClose, orderNumber, eventName, total,
         {/* QR Code */}
         <div className="p-6 text-center max-h-[605px] overflow-y-auto custom-scrollbar">
           <div className="bg-gray-100 p-8 rounded-2xl mb-6">
-            <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg mx-auto flex items-center justify-center">
-              {/* Mock QR Code - En implementación real usar librería de QR */}
-              <div className="grid grid-cols-8 gap-1">
-                {Array.from({length: 64}, (_, i) => (
-                  <div 
-                    key={i} 
-                    className={`w-2 h-2 ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`}
-                  />
-                ))}
-              </div>
+            <div ref={qrRef} className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg mx-auto flex items-center justify-center">
+              <QRCodeCanvas
+                value={orderNumber}
+                size={180}
+                bgColor={"#ffffff"}
+                fgColor={"#000000"}
+                level={"H"}
+                includeMargin={false}
+              />
             </div>
           </div>
 
@@ -61,12 +91,18 @@ export default function QRCode({ isOpen, onClose, orderNumber, eventName, total,
           </div>
 
           <div className="space-y-3">
-            <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
+            <button 
+              onClick={handleDownload}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
+            >
               <Download className="w-5 h-5" />
               <span>Descargar QR</span>
             </button>
             
-            <button className="w-full border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white font-bold py-3 px-6 rounded-full transition-all duration-300 flex items-center justify-center space-x-2">
+            <button 
+              onClick={handleShare}
+              className="w-full border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white font-bold py-3 px-6 rounded-full transition-all duration-300 flex items-center justify-center space-x-2"
+            >
               <Share className="w-5 h-5" />
               <span>Compartir</span>
             </button>

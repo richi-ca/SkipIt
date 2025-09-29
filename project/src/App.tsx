@@ -11,6 +11,8 @@ import UnderageBlock from './components/UnderageBlock';
 import HomePage from './pages/HomePage';
 import EventsPage from './pages/EventsPage';
 import { events, drinks, Event, User } from './data/mockData';
+import LoginPrompt from './components/LoginPrompt';
+import PaymentModal from './components/PaymentModal';
 
 function App() {
   const [isAgeVerified, setIsAgeVerified] = useState(false);
@@ -30,6 +32,11 @@ function App() {
   } | null>(null);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [actionAfterLogin, setActionAfterLogin] = useState<(() => void) | null>(null);
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState(0);
+
 
   const handleAgeConfirm = () => {
     setIsAgeVerified(true);
@@ -47,6 +54,10 @@ function App() {
   const handleLoginSuccess = (user: User) => {
     setCurrentUser(user);
     setIsLoginOpen(false);
+    if (actionAfterLogin) {
+      actionAfterLogin();
+      setActionAfterLogin(null);
+    }
   };
 
   const handleLogout = () => {
@@ -109,6 +120,30 @@ function App() {
     setIsQROpen(true);
   };
 
+  const openPaymentModal = () => {
+    const total = drinks
+      .filter(drink => cartItems[drink.id] > 0)
+      .reduce((sum, drink) => sum + (drink.price * cartItems[drink.id]), 0);
+    setPaymentAmount(total);
+    setIsCartOpen(false);
+    setIsPaymentModalOpen(true);
+  }
+
+  const handleCheckout = () => {
+    if (!currentUser) {
+      setActionAfterLogin(() => openPaymentModal);
+      setIsCartOpen(false);
+      setIsLoginPromptOpen(true);
+    } else {
+      openPaymentModal();
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    generateQR();
+  };
+
   return (
     <Router>
       <div className="min-h-screen bg-white">
@@ -134,6 +169,22 @@ function App() {
               </Routes>
             </main>
 
+            <LoginPrompt
+              isOpen={isLoginPromptOpen}
+              onClose={() => setIsLoginPromptOpen(false)}
+              onConfirm={() => {
+                setIsLoginPromptOpen(false);
+                setIsLoginOpen(true);
+              }}
+            />
+
+            <PaymentModal
+              isOpen={isPaymentModalOpen}
+              onClose={() => setIsPaymentModalOpen(false)}
+              onPaymentSuccess={handlePaymentSuccess}
+              totalAmount={paymentAmount}
+            />
+
             <LoginModal 
               isOpen={isLoginOpen} 
               onClose={() => setIsLoginOpen(false)} 
@@ -158,7 +209,7 @@ function App() {
               onClose={() => setIsCartOpen(false)}
               cartItems={cartItems}
               drinks={drinks}
-              onGenerateQR={generateQR}
+              onGenerateQR={handleCheckout}
             />
 
             {isQROpen && orderData && (
