@@ -1,6 +1,43 @@
-import React, { useState } from 'react';
-import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { X, User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import TermsModal from './TermsModal';
+
+// --- Sub-componente para el medidor de fortaleza de contraseña ---
+const PasswordStrengthMeter = ({ password }: { password?: string }) => {
+  const getStrength = () => {
+    if (!password) return 0;
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    return score;
+  };
+
+  const strength = getStrength();
+  const strengthLabels = ['Muy Débil', 'Débil', 'Normal', 'Fuerte', 'Muy Fuerte'];
+  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
+
+  return (
+    <div className="mt-2">
+      <div className="flex w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className={`transition-all duration-300 ${strengthColors[strength - 1] || ''}`} style={{ width: `${strength * 25}%` }}></div>
+      </div>
+      <p className="text-xs text-right mt-1 text-gray-500">{strength > 0 && strengthLabels[strength - 1]}</p>
+    </div>
+  );
+};
+
+// --- Tipos y componente principal ---
+interface IFormInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  acceptTerms: boolean;
+}
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -12,222 +49,182 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    acceptTerms: false
-  });
+  const [formSuccess, setFormSuccess] = useState('');
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    watch,
+    getValues,
+    setFocus,
+  } = useForm<IFormInput>({ mode: 'onBlur' });
+
+  const passwordValue = watch('password');
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        setFocus('firstName');
+      }, 100);
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    } else {
+      setTimeout(() => {
+        reset();
+        setFormSuccess('');
+        setShowPassword(false);
+        setShowConfirmPassword(false);
+      }, 200);
+    }
+  }, [isOpen, onClose, reset, setFocus]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Aquí iría la lógica de registro
-    console.log('Registro:', formData);
-    onClose();
-  };
+  const onSubmit: SubmitHandler<IFormInput> = async (data) => {
+    setFormSuccess('');
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    const newUser = {
+      id: Date.now(),
+      name: `${data.firstName} ${data.lastName}`,
+      email: data.email,
+      password_hash: data.password,
+    };
+
+    const jsonString = JSON.stringify(newUser, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `new_user_${newUser.id}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setFormSuccess('¡Registro exitoso! Serás redirigido al login.');
+    setTimeout(() => {
+      onClose();
+      onSwitchToLogin();
+    }, 2000);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]" role="dialog" aria-modal="true">
       <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
-        {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center space-x-2 mb-2">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-purple-600 font-bold text-lg">
-                  S
-                </div>
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-purple-600 font-bold text-lg">S</div>
                 <span className="text-xl font-bold">SkipIT</span>
               </div>
               <p className="text-purple-100 text-sm">SALTA LA FILA, DISFRUTA MÁS</p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors" aria-label="Cerrar modal">
               <X className="w-6 h-6" />
             </button>
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-6 max-h-[605px] overflow-y-auto custom-scrollbar">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
-            ¡Únete a SkipIT!
-          </h2>
-          <p className="text-gray-600 text-center mb-6">
-            Crea tu cuenta y empieza a disfrutar sin filas
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">¡Únete a SkipIT!</h2>
+          <p className="text-gray-600 text-center mb-6">Crea tu cuenta y empieza a disfrutar sin filas</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {formSuccess && (
+              <div role="alert" className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex items-center space-x-2">
+                <CheckCircle className="w-5 h-5" />
+                <span className="text-sm">{formSuccess}</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre
-                </label>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                    placeholder="Tu nombre"
-                    required
-                  />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input id="firstName" type="text" autoComplete="given-name" {...register('firstName', { required: 'El nombre es obligatorio.' })} className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.firstName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Tu nombre" aria-invalid={errors.firstName ? 'true' : 'false'} aria-describedby="firstName-error" />
                 </div>
+                {errors.firstName && <p id="firstName-error" role="alert" className="text-sm text-red-600 mt-2">{errors.firstName.message}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Apellido
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Tu apellido"
-                  required
-                />
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">Apellido</label>
+                <input id="lastName" type="text" autoComplete="family-name" {...register('lastName', { required: 'El apellido es obligatorio.' })} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.lastName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Tu apellido" aria-invalid={errors.lastName ? 'true' : 'false'} aria-describedby="lastName-error" />
+                {errors.lastName && <p id="lastName-error" role="alert" className="text-sm text-red-600 mt-2">{errors.lastName.message}</p>}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
+              <label htmlFor="email-register" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="tu@email.com"
-                  required
-                />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input id="email-register" type="email" autoComplete="email" {...register('email', { required: 'El email es obligatorio.', pattern: { value: /\S+@\S+\.\S+/, message: 'El formato del email no es válido.' } })} className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="tu@email.com" aria-invalid={errors.email ? 'true' : 'false'} aria-describedby="email-register-error" />
               </div>
+              {errors.email && <p id="email-register-error" role="alert" className="text-sm text-red-600 mt-2">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contraseña
-              </label>
+              <label htmlFor="password-register" className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Mínimo 8 caracteres"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input id="password-register" type={showPassword ? 'text' : 'password'} autoComplete="new-password" {...register('password', { required: 'La contraseña es obligatoria.', minLength: { value: 8, message: 'Debe tener al menos 8 caracteres.' } })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Mínimo 8 caracteres" aria-invalid={errors.password ? 'true' : 'false'} aria-describedby="password-register-error" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {errors.password && <p id="password-register-error" role="alert" className="text-sm text-red-600 mt-2">{errors.password.message}</p>}
+              <PasswordStrengthMeter password={passwordValue} />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirmar Contraseña
-              </label>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Repite tu contraseña"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" {...register('confirmPassword', { required: 'Confirma tu contraseña.', validate: value => value === getValues('password') || 'Las contraseñas no coinciden.' })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Repite tu contraseña" aria-invalid={errors.confirmPassword ? 'true' : 'false'} aria-describedby="confirmPassword-error" />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {errors.confirmPassword && <p id="confirmPassword-error" role="alert" className="text-sm text-red-600 mt-2">{errors.confirmPassword.message}</p>}
             </div>
 
             <div className="flex items-start space-x-3">
-              <input
-                type="checkbox"
-                name="acceptTerms"
-                checked={formData.acceptTerms}
-                onChange={handleInputChange}
-                className="mt-1 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                required
-              />
-              <label className="text-sm text-gray-600">
-                Acepto los{' '}
-                <button 
-                  type="button"
-                  onClick={() => setShowTerms(true)}
-                  className="text-purple-600 hover:text-purple-700 font-medium underline"
-                >
-                  términos y condiciones
-                </button>{' '}
-                y la{' '}
-                <a href="/privacy" className="text-purple-600 hover:text-purple-700 font-medium">
-                  política de privacidad
-                </a>
-              </label>
+              <input id="acceptTerms" type="checkbox" {...register('acceptTerms', { required: 'Debes aceptar los términos.' })} className="mt-1 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500" aria-describedby="acceptTerms-error" />
+              <div className="text-sm">
+                <label htmlFor="acceptTerms" className="text-gray-600">Acepto los{' '}</label>
+                <button type="button" onClick={() => setShowTerms(true)} className="text-purple-600 hover:text-purple-700 font-medium underline">términos y condiciones</button>
+              </div>
             </div>
+            {errors.acceptTerms && <p id="acceptTerms-error" role="alert" className="text-sm text-red-600">{errors.acceptTerms.message}</p>}
 
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
-              Crear Cuenta
+            <button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-4 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed disabled:scale-100">
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creando cuenta...
+                </>
+              ) : (
+                'Crear Cuenta'
+              )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              ¿Ya tienes cuenta?{' '}
-              <button 
-                onClick={() => {
-                  onClose();
-                  onSwitchToLogin();
-                }}
-                className="text-purple-600 hover:text-purple-700 font-medium"
-              >
-                Inicia sesión aquí
-              </button>
-            </p>
+            <p className="text-gray-600">¿Ya tienes cuenta?{' '}<button onClick={onSwitchToLogin} className="text-purple-600 hover:text-purple-700 font-medium">Inicia sesión aquí</button></p>
           </div>
         </div>
 
-        {/* Terms Modal */}
-        <TermsModal
-          isOpen={showTerms}
-          onClose={() => setShowTerms(false)}
-        />
+        <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
       </div>
     </div>
   );

@@ -92,7 +92,7 @@ export const drinks: Drink[] = [
     image: "https://images.pexels.com/photos/5946085/pexels-photo-5946085.jpeg",
     category: "Cervezas"
   },
-  
+
   // Tragos
   {
     id: 4,
@@ -126,7 +126,7 @@ export const drinks: Drink[] = [
     image: "https://images.pexels.com/photos/5947043/pexels-photo-5947043.jpeg",
     category: "Tragos"
   },
-  
+
   // Shots
   {
     id: 8,
@@ -152,7 +152,7 @@ export const drinks: Drink[] = [
     image: "https://images.pexels.com/photos/5947088/pexels-photo-5947088.jpeg",
     category: "Shots"
   },
-  
+
   // Sin Alcohol
   {
     id: 11,
@@ -170,4 +170,38 @@ export const drinks: Drink[] = [
     image: "https://images.pexels.com/photos/5947091/pexels-photo-5947091.jpeg",
     category: "Sin Alcohol"
   }
+];
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  password_hash: string;
+}
+
+export const users: User[] = [
+  {
+    id: 1,
+    name: "Juan Perez",
+    email: "juan.perez@example.com",
+    password_hash: "password123",
+  },
+  {
+    id: 2,
+    name: "Ana Garcia",
+    email: "ana.garcia@example.com",
+    password_hash: "securepassword",
+  },
+  {
+    id: 3,
+    name: "Carlos Sanchez",
+    email: "carlos.sanchez@example.com",
+    password_hash: "carlospass",
+  },
+  {
+    id: 1759105113010,
+    name: "Ricardo Castillo Avalos",
+    email: "ricardo@correo.com",
+    password_hash: "123456789"
+  },
 ];

@@ -10,7 +10,7 @@ import AgeVerification from './components/AgeVerification';
 import UnderageBlock from './components/UnderageBlock';
 import HomePage from './pages/HomePage';
 import EventsPage from './pages/EventsPage';
-import { events, drinks, Event } from './data/mockData';
+import { events, drinks, Event, User } from './data/mockData';
 
 function App() {
   const [isAgeVerified, setIsAgeVerified] = useState(false);
@@ -21,6 +21,7 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isQROpen, setIsQROpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [orderData, setOrderData] = useState<{
     orderNumber: string;
     eventName: string;
@@ -41,6 +42,15 @@ function App() {
 
   const handleGoBack = () => {
     setShowUnderageBlock(false);
+  };
+
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
+    setIsLoginOpen(false);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
   };
 
   useEffect(() => {
@@ -113,6 +123,8 @@ function App() {
               onOpenRegister={() => setIsRegisterOpen(true)}
               onOpenCart={() => setIsCartOpen(true)}
               cartItemCount={getTotalItems()}
+              currentUser={currentUser}
+              onLogout={handleLogout}
             />
 
             <main>
@@ -122,7 +134,12 @@ function App() {
               </Routes>
             </main>
 
-            <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onSwitchToRegister={() => { setIsLoginOpen(false); setIsRegisterOpen(true); }} />
+            <LoginModal 
+              isOpen={isLoginOpen} 
+              onClose={() => setIsLoginOpen(false)} 
+              onSwitchToRegister={() => { setIsLoginOpen(false); setIsRegisterOpen(true); }} 
+              onLoginSuccess={handleLoginSuccess}
+            />
             <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} onSwitchToLogin={() => { setIsRegisterOpen(false); setIsLoginOpen(true); }} />
             
             {selectedEvent && (

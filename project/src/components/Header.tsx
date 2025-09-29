@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Menu, Instagram, ShoppingCart } from 'lucide-react';
+import { Menu, Instagram, ShoppingCart, User as UserIcon, LogOut } from 'lucide-react';
+import { User } from '../data/mockData';
 
 interface HeaderProps {
   onOpenLogin: () => void;
@@ -8,9 +9,11 @@ interface HeaderProps {
   onOpenCart: () => void;
   cartItemCount: number;
   isVisible: boolean;
+  currentUser: User | null;
+  onLogout: () => void;
 }
 
-export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, cartItemCount, isVisible }: HeaderProps) {
+export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, cartItemCount, isVisible, currentUser, onLogout }: HeaderProps) {
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50 ${
       isActive ? 'text-purple-600 bg-purple-100' : ''
@@ -60,12 +63,27 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, cartIt
           {/* Actions */}
           <div className="flex items-center space-x-4">
             <div className="hidden lg:flex items-center space-x-4">
-              <button onClick={onOpenLogin} className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
-                Inicia Sesión
-              </button>
-              <button onClick={onOpenRegister} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-4 py-2 rounded-full transition-all duration-300 transform hover:scale-105">
-                Regístrate
-              </button>
+              {currentUser ? (
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <UserIcon className="w-5 h-5 text-gray-600" />
+                    <span className="font-medium text-gray-700">Hola, {currentUser.name.split(' ')[0]}</span>
+                  </div>
+                  <button onClick={onLogout} className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50 flex items-center space-x-2">
+                    <LogOut className="w-5 h-5" />
+                    <span>Salir</span>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button onClick={onOpenLogin} className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
+                    Inicia Sesión
+                  </button>
+                  <button onClick={onOpenRegister} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-4 py-2 rounded-full transition-all duration-300 transform hover:scale-105">
+                    Regístrate
+                  </button>
+                </>
+              )}
               <button onClick={onOpenCart} className="relative p-2 text-gray-700 hover:text-purple-600 transition-colors rounded-full hover:bg-purple-50">
                 <ShoppingCart className="w-6 h-6" />
                 {cartItemCount > 0 && (
