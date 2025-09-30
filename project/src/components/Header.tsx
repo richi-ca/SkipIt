@@ -2,18 +2,21 @@ import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Menu, Instagram, ShoppingCart, User as UserIcon, LogOut } from 'lucide-react';
 import { User } from '../data/mockData';
+import { useCart } from '../context/CartContext';
 
 interface HeaderProps {
   onOpenLogin: () => void;
   onOpenRegister: () => void;
   onOpenCart: () => void;
-  cartItemCount: number;
   isVisible: boolean;
   currentUser: User | null;
   onLogout: () => void;
 }
 
-export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, cartItemCount, isVisible, currentUser, onLogout }: HeaderProps) {
+export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisible, currentUser, onLogout }: HeaderProps) {
+  const { getTotalItems } = useCart();
+  const cartItemCount = getTotalItems();
+
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50 ${
       isActive ? 'text-purple-600 bg-purple-100' : ''

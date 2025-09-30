@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Minus, X } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 interface Drink {
   id: number;
@@ -13,20 +14,15 @@ interface Drink {
 interface DrinkMenuProps {
   eventName: string;
   drinks: Drink[];
-  cartItems: { [key: number]: number };
-  onAddToCart: (drinkId: number) => void;
-  onRemoveFromCart: (drinkId: number) => void;
   onClose: () => void;
 }
 
 export default function DrinkMenu({ 
   eventName, 
   drinks, 
-  cartItems, 
-  onAddToCart, 
-  onRemoveFromCart, 
   onClose 
 }: DrinkMenuProps) {
+  const { cartItems, addToCart, removeFromCart } = useCart();
   const categories = [...new Set(drinks.map(drink => drink.category))];
 
   return (
@@ -75,7 +71,7 @@ export default function DrinkMenu({
                             {cartItems[drink.id] ? (
                               <div className="flex items-center space-x-2">
                                 <button
-                                  onClick={() => onRemoveFromCart(drink.id)}
+                                  onClick={() => removeFromCart(drink.id)}
                                   className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
                                 >
                                   <Minus className="w-4 h-4" />
@@ -84,7 +80,7 @@ export default function DrinkMenu({
                                   {cartItems[drink.id]}
                                 </span>
                                 <button
-                                  onClick={() => onAddToCart(drink.id)}
+                                  onClick={() => addToCart(drink.id)}
                                   className="w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors"
                                 >
                                   <Plus className="w-4 h-4" />
@@ -92,7 +88,7 @@ export default function DrinkMenu({
                               </div>
                             ) : (
                               <button
-                                onClick={() => onAddToCart(drink.id)}
+                                onClick={() => addToCart(drink.id)}
                                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-full transition-all duration-300 transform hover:scale-105"
                               >
                                 Agregar
