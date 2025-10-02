@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { Order } from '../data/mockData';
 
 // Define the shape of the context
 interface CartContextType {
@@ -8,6 +9,7 @@ interface CartContextType {
   deleteProductFromCart: (drinkId: number) => void;
   clearCart: () => void;
   getTotalItems: () => number;
+  repeatOrder: (orderItems: Order['items']) => void; // Nueva función
 }
 
 // Create the context
@@ -48,8 +50,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return Object.values(cartItems).reduce((sum, count) => sum + count, 0);
   };
 
+  // Nueva función para repetir un pedido
+  const repeatOrder = (orderItems: Order['items']) => {
+    setCartItems(prev => {
+      const newItems = { ...prev };
+      orderItems.forEach(item => {
+        const drinkId = item.drink.id;
+        const quantity = item.quantity;
+        newItems[drinkId] = (newItems[drinkId] || 0) + quantity;
+      });
+      return newItems;
+    });
+  };
+
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, deleteProductFromCart, clearCart, getTotalItems }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, deleteProductFromCart, clearCart, getTotalItems, repeatOrder }}>
       {children}
     </CartContext.Provider>
   );

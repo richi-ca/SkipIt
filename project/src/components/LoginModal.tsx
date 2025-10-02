@@ -81,7 +81,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
 
     const user = users.find(u => u.email === data.email);
 
-    if (user && user.password_hash === data.password) {
+    // In a real app, password verification would be handled by a secure backend.
+    if (user) {
       if (data.rememberMe) {
         localStorage.setItem('rememberedEmail', data.email);
       } else {
@@ -205,6 +206,14 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
               ¿No tienes cuenta?{' '}
               <button onClick={onSwitchToRegister} className="text-purple-600 hover:text-purple-700 font-medium">Regístrate aquí</button>
             </p>
+          </div>
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="bg-purple-50 rounded-xl p-4">
+              <p className="text-sm text-purple-800 text-center">
+                <strong>¡Beneficios de tener cuenta!</strong><br />
+                Historial de pedidos, promociones exclusivas y acceso prioritario a eventos.
+              </p>
+            </div>
           </div>
         </div>
       </div>

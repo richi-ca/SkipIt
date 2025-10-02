@@ -173,35 +173,82 @@ export const drinks: Drink[] = [
 ];
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  password_hash: string;
+  hasPriorityAccess: boolean;
 }
 
 export const users: User[] = [
   {
-    id: 1,
+    id: "1",
     name: "Juan Perez",
     email: "juan.perez@example.com",
-    password_hash: "password123",
+    hasPriorityAccess: true,
   },
   {
-    id: 2,
+    id: "2",
     name: "Ana Garcia",
     email: "ana.garcia@example.com",
-    password_hash: "securepassword",
+    hasPriorityAccess: false,
   },
   {
-    id: 3,
+    id: "3",
     name: "Carlos Sanchez",
     email: "carlos.sanchez@example.com",
-    password_hash: "carlospass",
+    hasPriorityAccess: false,
   },
   {
-    id: 1759105113010,
+    id: "1759105113010",
     name: "Ricardo Castillo Avalos",
     email: "ricardo@correo.com",
-    password_hash: "123456789"
+    hasPriorityAccess: true,
+  },
+];
+
+export interface Order {
+  orderId: string;
+  userId: string;
+  date: string;
+  event: Event;
+  items: {
+    drink: Drink;
+    quantity: number;
+  }[];
+  total: number;
+}
+
+export const orders: Order[] = [
+  {
+    orderId: 'ORD-001',
+    userId: "1",
+    date: '2025-01-15',
+    event: events[0],
+    items: [
+      { drink: drinks[3], quantity: 2 },
+      { drink: drinks[0], quantity: 1 },
+    ],
+    total: 18500,
+  },
+  {
+    orderId: 'ORD-002',
+    userId: "1",
+    date: '2025-01-18',
+    event: events[1],
+    items: [
+      { drink: drinks[4], quantity: 1 },
+      { drink: drinks[5], quantity: 1 },
+    ],
+    total: 12500,
+  },
+  {
+    orderId: 'ORD-003',
+    userId: "2",
+    date: '2025-01-22',
+    event: events[2],
+    items: [
+      { drink: drinks[8], quantity: 3 },
+    ],
+    total: 12000,
   },
 ];

@@ -10,26 +10,24 @@ import AgeVerification from './components/AgeVerification';
 import UnderageBlock from './components/UnderageBlock';
 import HomePage from './pages/HomePage';
 import EventsPage from './pages/EventsPage';
+import OrderHistoryPage from './pages/OrderHistoryPage';
 import { events, drinks, Event, User } from './data/mockData';
 import LoginPrompt from './components/LoginPrompt';
 import PaymentModal from './components/PaymentModal';
-
-import { CartProvider, useCart } from './context/CartContext';
-
-import ConfirmationModal from './components/ConfirmationModal';
+import { useAuth } from './context/AuthContext';
+import { useCart } from './context/CartContext';
 
 function App() {
   return (
     <Router>
-      <CartProvider>
-        <AppContent />
-      </CartProvider>
+      <AppContent />
     </Router>
   );
 }
 
 function AppContent() {
-  const { cartItems, clearCart, getTotalItems } = useCart();
+  const { cartItems, clearCart } = useCart();
+  const { login, isAuthenticated } = useAuth();
   const [isAgeVerified, setIsAgeVerified] = useState(false);
   const [showUnderageBlock, setShowUnderageBlock] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -37,7 +35,6 @@ function AppContent() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isQROpen, setIsQROpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [orderData, setOrderData] = useState<{
     orderNumber: string;
     eventName: string;
@@ -49,7 +46,6 @@ function AppContent() {
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
-  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const lastScrollY = useRef(0);
 
   const handleAgeConfirm = () => {
@@ -65,22 +61,13 @@ function AppContent() {
     setShowUnderageBlock(false);
   };
 
-  const handleLoginSuccess = (user: User) => {
-    setCurrentUser(user);
+  const handleLoginSuccess = (loggedInUser: User) => {
+    login(loggedInUser);
     setIsLoginOpen(false);
     if (actionAfterLogin) {
       actionAfterLogin();
       setActionAfterLogin(null);
     }
-  };
-
-  const handleLogout = () => {
-    setIsLogoutConfirmOpen(true);
-  };
-
-  const confirmLogout = () => {
-    setCurrentUser(null);
-    setIsLogoutConfirmOpen(false);
   };
 
   useEffect(() => {
@@ -131,7 +118,7 @@ function AppContent() {
   }
 
   const handleCheckout = () => {
-    if (!currentUser) {
+    if (!isAuthenticated) {
       setActionAfterLogin(() => openPaymentModal);
       setIsCartOpen(false);
       setIsLoginPromptOpen(true);
@@ -157,25 +144,15 @@ function AppContent() {
             onOpenLogin={() => setIsLoginOpen(true)}
             onOpenRegister={() => setIsRegisterOpen(true)}
             onOpenCart={() => setIsCartOpen(true)}
-            currentUser={currentUser}
-            onLogout={handleLogout}
           />
 
           <main>
             <Routes>
               <Route path="/" element={<HomePage events={events} onSelectEvent={setSelectedEvent} onOpenRegister={() => setIsRegisterOpen(true)} />} />
               <Route path="/events" element={<EventsPage onSelectEvent={setSelectedEvent} />} />
+              <Route path="/history" element={<OrderHistoryPage />} />
             </Routes>
           </main>
-
-          <ConfirmationModal
-            isOpen={isLogoutConfirmOpen}
-            onClose={() => setIsLogoutConfirmOpen(false)}
-            onConfirm={confirmLogout}
-            title="Confirmar Cierre de Sesión"
-            message="¿Estás seguro de que quieres cerrar sesión?"
-            confirmText="Cerrar Sesión"
-          />
 
           <LoginPrompt
             isOpen={isLoginPromptOpen}
