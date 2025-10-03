@@ -75,7 +75,7 @@ export default function Cart({ isOpen, onClose, drinks, onGenerateQR }: CartProp
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
             {cartDrinks.length === 0 ? (
               <div className="text-center py-12">
                 <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />

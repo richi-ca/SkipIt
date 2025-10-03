@@ -6,9 +6,10 @@ interface OrderSummaryCardProps {
   order: Order;
   onShowQr: (order: Order) => void;
   onRepeatOrder: (order: Order) => void;
+  onManage: (order: Order) => void;
 }
 
-const OrderSummaryCard = ({ order, onShowQr, onRepeatOrder }: OrderSummaryCardProps) => {
+const OrderSummaryCard = ({ order, onShowQr, onRepeatOrder, onManage }: OrderSummaryCardProps) => {
   // En una app real, aquí habría lógica para determinar si el evento ya pasó.
   // Por ahora, asumimos que todos los eventos son futuros y el QR es visible.
   const isEventUpcoming = true; 
@@ -52,6 +53,12 @@ const OrderSummaryCard = ({ order, onShowQr, onRepeatOrder }: OrderSummaryCardPr
 
       {isEventUpcoming && (
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={() => onManage(order)}
+            className="flex-1 border-2 border-gray-500 text-gray-600 hover:bg-gray-100 font-bold py-3 px-6 rounded-full transition-all duration-300 flex items-center justify-center space-x-2"
+          >
+            <span>Gestionar</span>
+          </button>
           <button
             onClick={() => onRepeatOrder(order)}
             className="flex-1 border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-bold py-3 px-6 rounded-full transition-all duration-300 flex items-center justify-center space-x-2"

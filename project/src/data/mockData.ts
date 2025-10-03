@@ -214,8 +214,10 @@ export interface Order {
   items: {
     drink: Drink;
     quantity: number;
+    claimed: number;
   }[];
   total: number;
+  status: 'COMPLETED' | 'PARTIALLY_CLAIMED' | 'FULLY_CLAIMED';
 }
 
 export const orders: Order[] = [
@@ -225,10 +227,11 @@ export const orders: Order[] = [
     date: '2025-01-15',
     event: events[0],
     items: [
-      { drink: drinks[3], quantity: 2 },
-      { drink: drinks[0], quantity: 1 },
+      { drink: drinks[3], quantity: 2, claimed: 0 },
+      { drink: drinks[0], quantity: 1, claimed: 0 },
     ],
     total: 18500,
+    status: 'COMPLETED',
   },
   {
     orderId: 'ORD-002',
@@ -236,10 +239,11 @@ export const orders: Order[] = [
     date: '2025-01-18',
     event: events[1],
     items: [
-      { drink: drinks[4], quantity: 1 },
-      { drink: drinks[5], quantity: 1 },
+      { drink: drinks[4], quantity: 1, claimed: 1 },
+      { drink: drinks[5], quantity: 1, claimed: 0 },
     ],
     total: 12500,
+    status: 'PARTIALLY_CLAIMED',
   },
   {
     orderId: 'ORD-003',
@@ -247,8 +251,9 @@ export const orders: Order[] = [
     date: '2025-01-22',
     event: events[2],
     items: [
-      { drink: drinks[8], quantity: 3 },
+      { drink: drinks[8], quantity: 3, claimed: 3 },
     ],
     total: 12000,
+    status: 'FULLY_CLAIMED',
   },
 ];

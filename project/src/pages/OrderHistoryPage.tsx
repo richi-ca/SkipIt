@@ -1,19 +1,21 @@
-
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { orders as mockOrders, Order } from '../data/mockData';
+import { useOrders } from '../context/OrderContext';
+import { Order } from '../data/mockData';
 import OrderSummaryCard from '../components/OrderSummaryCard';
 import QRCode from '../components/QRCode';
-import OrderHistorySkeleton from '../components/OrderHistorySkeleton';
 import EmptyState from '../components/EmptyState';
-import FilterPopover from '../components/FilterPopover'; // Importar el nuevo componente
+import FilterPopover from '../components/FilterPopover';
 
-const OrderHistoryPage = () => {
+interface OrderHistoryPageProps {
+  onManageOrder: (order: Order) => void;
+}
+
+const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({ onManageOrder }) => {
   const { user } = useAuth();
   const { repeatOrder } = useCart();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { orders: allOrders } = useOrders();
 
   const [filtroEvento, setFiltroEvento] = useState('todos');
   const [filtroMes, setFiltroMes] = useState('todos');
@@ -21,37 +23,29 @@ const OrderHistoryPage = () => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [selectedOrderData, setSelectedOrderData] = useState<Order | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      setTimeout(() => {
-        const userOrders = mockOrders.filter((order) => order.userId.toString() === user.id);
-        setOrders(userOrders);
-        setLoading(false);
-      }, 1000);
-    } else {
-      setLoading(false);
-      setOrders([]);
-    }
-  }, [user]);
+  const userOrders = useMemo(() => {
+    if (!user) return [];
+    return allOrders.filter(order => order.userId === user.id);
+  }, [allOrders, user]);
 
   const opcionesEvento = useMemo(() => {
-    const eventos = orders.map(order => order.event);
+    const eventos = userOrders.map(order => order.event);
     return Array.from(new Map(eventos.map(e => [e.id, e])).values());
-  }, [orders]);
+  }, [userOrders]);
 
   const opcionesMes = useMemo(() => {
-    const meses = orders.map(order => new Date(order.date).toLocaleString('es-ES', { month: 'long' }));
+    const meses = userOrders.map(order => new Date(order.date).toLocaleString('es-ES', { month: 'long' }));
     return [...new Set(meses)];
-  }, [orders]);
+  }, [userOrders]);
 
   const pedidosFiltrados = useMemo(() => {
-    return orders.filter(order => {
+    return userOrders.filter(order => {
       const pasaFiltroEvento = filtroEvento === 'todos' || order.event.id.toString() === filtroEvento;
       const mesPedido = new Date(order.date).toLocaleString('es-ES', { month: 'long' });
       const pasaFiltroMes = filtroMes === 'todos' || mesPedido === filtroMes;
       return pasaFiltroEvento && pasaFiltroMes;
     });
-  }, [orders, filtroEvento, filtroMes]);
+  }, [userOrders, filtroEvento, filtroMes]);
 
   const handleShowQr = (order: Order) => {
     setSelectedOrderData(order);
@@ -67,8 +61,17 @@ const OrderHistoryPage = () => {
     repeatOrder(order.items);
   };
 
-  if (loading) {
-    return <OrderHistorySkeleton />;
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 md:p-8">
+        <EmptyState 
+          title="Inicia sesión para ver tu historial"
+          message="Parece que no has iniciado sesión. ¡Ingresa para ver tus compras pasadas!"
+          buttonText="Iniciar Sesión"
+          buttonLink="/"
+        />
+      </div>
+    );
   }
 
   return (
@@ -76,7 +79,7 @@ const OrderHistoryPage = () => {
       <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold text-gray-900">Mi Historial de Pedidos</h1>
         
-        {orders.length > 0 && (
+        {userOrders.length > 0 && (
           <FilterPopover 
             filtroEvento={filtroEvento}
             setFiltroEvento={setFiltroEvento}
@@ -96,13 +99,14 @@ const OrderHistoryPage = () => {
               order={order} 
               onShowQr={handleShowQr} 
               onRepeatOrder={handleRepeatOrder}
+              onManage={onManageOrder}
             />
           ))}
         </div>
       ) : (
         <EmptyState 
-          title={orders.length > 0 ? "Sin Resultados" : "Aún no tienes pedidos"}
-          message={orders.length > 0 ? "No se encontraron pedidos que coincidan con tus filtros." : "Parece que todavía no has realizado ninguna compra. ¡Explora nuestros eventos y evita las filas!"}
+          title={userOrders.length > 0 ? "Sin Resultados" : "Aún no tienes pedidos"}
+          message={userOrders.length > 0 ? "No se encontraron pedidos que coincidan con tus filtros." : "Parece que todavía no has realizado ninguna compra. ¡Explora nuestros eventos y evita las filas!"}
           buttonText="Explorar Eventos"
           buttonLink="/events"
         />

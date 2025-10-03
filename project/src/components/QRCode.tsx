@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
-import { X, Download, Share } from 'lucide-react';
+import { X, Download, Share, Check } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { useOrders } from '../context/OrderContext';
 
 interface QRCodeProps {
   isOpen: boolean;
@@ -12,9 +13,10 @@ interface QRCodeProps {
 }
 
 export default function QRCode({ isOpen, onClose, orderNumber, eventName, total, drinks }: QRCodeProps) {
-  if (!isOpen) return null;
-
+  const { markQrAsUsed } = useOrders();
   const qrRef = useRef<HTMLDivElement>(null);
+
+  if (!isOpen) return null;
 
   const handleDownload = () => {
     const canvas = qrRef.current?.querySelector('canvas');
@@ -44,6 +46,11 @@ export default function QRCode({ isOpen, onClose, orderNumber, eventName, total,
     }
   };
 
+  const handleMarkAsUsed = () => {
+    markQrAsUsed(orderNumber);
+    onClose();
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden">
@@ -65,7 +72,7 @@ export default function QRCode({ isOpen, onClose, orderNumber, eventName, total,
           <div className="bg-gray-100 p-8 rounded-2xl mb-6">
             <div ref={qrRef} className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg mx-auto flex items-center justify-center">
               <QRCodeCanvas
-                value={orderNumber}
+                value={JSON.stringify({ type: 'GLOBAL', orderNumber, eventName, total, drinks })}
                 size={180}
                 bgColor={"#ffffff"}
                 fgColor={"#000000"}
@@ -105,6 +112,11 @@ export default function QRCode({ isOpen, onClose, orderNumber, eventName, total,
             >
               <Share className="w-5 h-5" />
               <span>Compartir</span>
+            </button>
+
+            <button onClick={handleMarkAsUsed} className="w-full text-red-500 hover:text-red-700 text-xs font-bold py-2 px-4 rounded-full transition-all duration-300 flex items-center justify-center space-x-1">
+                <Check className="w-4 h-4" />
+                <span>Simular Uso / Marcar como Usado</span>
             </button>
           </div>
 
