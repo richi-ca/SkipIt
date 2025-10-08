@@ -12,15 +12,15 @@ export default function Hero() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center">
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white mb-6">
-            <span className="block">¡Salta la fila,</span>
+            <span className="block">¡Sáltate la fila,</span>
             <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-              disfruta más!
+              y dedícate a disfrutar!
             </span>
           </h1>
           
           <p className="text-xl sm:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
             Precompra tus tragos favoritos y canjéalos al instante con tu código QR. 
-            Más tiempo para bailar, menos tiempo haciendo fila.
+            Para nosotros tu tiempo es oro…¡Gástalo bailando con SkipIT!
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
