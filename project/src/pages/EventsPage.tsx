@@ -15,7 +15,9 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
             Todos los Eventos
           </h1>
           <p className="text-xl text-gray-600">
-            Explora todos nuestros próximos eventos y no te pierdas nada.
+            Encuentra aquí los mejores panoramas. 
+            <br />
+            ¡Asegura tu trago y dile adiós a la fila!
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

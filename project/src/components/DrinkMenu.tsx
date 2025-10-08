@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Minus, X } from 'lucide-react';
+import { Plus, Minus, X, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 interface Drink {
@@ -15,19 +15,22 @@ interface DrinkMenuProps {
   eventName: string;
   drinks: Drink[];
   onClose: () => void;
+  onOpenCart: () => void;
 }
 
 export default function DrinkMenu({ 
   eventName, 
   drinks, 
-  onClose 
+  onClose, 
+  onOpenCart
 }: DrinkMenuProps) {
-  const { cartItems, addToCart, removeFromCart } = useCart();
+  const { cartItems, addToCart, removeFromCart, getTotalItems } = useCart();
   const categories = [...new Set(drinks.map(drink => drink.category))];
+  const totalItems = getTotalItems();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden relative">
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white relative">
           <button
@@ -36,7 +39,7 @@ export default function DrinkMenu({
           >
             <X className="w-6 h-6" />
           </button>
-          <h2 className="text-2xl font-bold mb-2">Menú de Tragos</h2>
+          <h2 className="text-2xl font-bold mb-2">Carta de Tragos</h2>
           <p className="text-purple-100">{eventName}</p>
         </div>
 
@@ -91,7 +94,7 @@ export default function DrinkMenu({
                                 onClick={() => addToCart(drink.id)}
                                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-full transition-all duration-300 transform hover:scale-105"
                               >
-                                Agregar
+                                <Plus className="w-4 h-4" />
                               </button>
                             )}
                           </div>
@@ -103,6 +106,20 @@ export default function DrinkMenu({
             </div>
           ))}
         </div>
+
+        {totalItems > 0 && (
+          <div className="absolute bottom-8 right-8">
+            <button
+              onClick={onOpenCart}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-full h-16 w-16 flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform"
+            >
+              <ShoppingCart className="w-8 h-8" />
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                {totalItems}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

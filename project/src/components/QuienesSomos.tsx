@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import { Clock, Users, Zap, Heart, Trophy, Smartphone } from 'lucide-react';
 
 interface QuienesSomosProps {
@@ -52,6 +52,38 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
           </div>
         </div>
 
+        {/* Vision */}
+        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12">
+          <div className="relative">
+              <img
+                src="https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg"
+                alt="Personas disfrutando en un evento"
+                className="rounded-2xl shadow-lg w-full h-80 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-purple-600/20 to-transparent rounded-2xl"></div>
+            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                Nuestra Visión
+              </h3>
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                Convertirnos en un ícono de la cultura de la entretención moderna, inspirando una nueva forma de disfrutar los eventos masivos:
+                <span className="font-semibold text-purple-600"> sin esperas, con menos filas, y creando momentos inolvidables.</span>.
+              </p>
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                  <Heart className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-lg font-semibold text-gray-900">
+                  Más diversión, menos espera
+                </span>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
         {/* How it works */}
         <div id="como-funciona" className="py-20">
           <h3 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-12 text-center">
@@ -88,34 +120,6 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
               </p>
             </div>
           </div>
-
-
-          {/* Benefits */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <Clock className="w-12 h-12 text-orange-500 mb-4" />
-              <h4 className="text-xl font-bold text-gray-900 mb-3">Ahorra Tiempo</h4>
-              <p className="text-gray-600">
-                Evita las largas filas en las barras. Tu tiempo es para bailar, no para esperar.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <Users className="w-12 h-12 text-purple-500 mb-4" />
-              <h4 className="text-xl font-bold text-gray-900 mb-3">Más Diversión</h4>
-              <p className="text-gray-600">
-                Dedica más tiempo a disfrutar con tus amigos y menos tiempo haciendo trámites.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <Zap className="w-12 h-12 text-green-500 mb-4" />
-              <h4 className="text-xl font-bold text-gray-900 mb-3">Súper Fácil</h4>
-              <p className="text-gray-600">
-                Proceso simple: compra, recibe tu QR y canjea. ¡Así de fácil es con SkipIT!
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Call to action */}
@@ -132,14 +136,14 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
                 onClick={onOpenRegister}
                 className="bg-white text-purple-600 hover:bg-gray-100 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
-                Regístrate Gratis
+                Regístrate Aquí
               </button>
-              <a
-                href="#eventos"
+              <Link
+                to="/events"
                 className="border-2 border-white text-white hover:bg-white hover:text-purple-600 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 hover:scale-105"
               >
                 Ver Eventos
-              </a>
+              </Link>
             </div>
           </div>
         </div>

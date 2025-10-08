@@ -32,10 +32,10 @@ export default function EventCard({ event, onSelect }: EventCardProps) {
             {event.type}
           </span>
         </div>
-        <div className="absolute top-4 right-4 flex items-center bg-black bg-opacity-50 text-white px-2 py-1 rounded-full">
+        {/* <div className="absolute top-4 right-4 flex items-center bg-black bg-opacity-50 text-white px-2 py-1 rounded-full">
           <Star className="w-4 h-4 text-yellow-400 mr-1" />
           <span className="text-sm">{event.rating}</span>
-        </div>
+        </div> */}
       </div>
 
       <div className="p-6">
@@ -57,14 +57,14 @@ export default function EventCard({ event, onSelect }: EventCardProps) {
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-purple-600">
+          {/* <div className="text-2xl font-bold text-purple-600">
             Desde {event.price}
-          </div>
+          </div> */}
           <button
             onClick={() => onSelect(event)}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105"
           >
-            Ver Menú
+            Ver Carta
           </button>
         </div>
       </div>

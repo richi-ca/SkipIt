@@ -106,7 +106,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
                 <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-purple-600 font-bold text-lg">S</div>
                 <span className="text-xl font-bold">SkipIT</span>
               </div>
-              <p className="text-purple-100 text-sm">SALTA LA FILA, DISFRUTA MÁS</p>
+              <p className="text-purple-100 text-sm">¡Sáltate la fila, y dedícate a disfrutar!</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors" aria-label="Cerrar modal">
               <X className="w-6 h-6" />

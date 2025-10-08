@@ -26,10 +26,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const removeFromCart = (drinkId: number) => {
     setCartItems(prev => {
       const newItems = { ...prev };
-      // Stop decrementing if the quantity is 1
       if (newItems[drinkId] > 1) {
         newItems[drinkId]--;
-      } 
+      } else {
+        delete newItems[drinkId];
+      }
       return newItems;
     });
   };

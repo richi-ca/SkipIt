@@ -191,6 +191,11 @@ function AppContent() {
     setIsMultiQrModalOpen(true);
   };
 
+  const handleOpenCartFromMenu = () => {
+    setSelectedEvent(null);
+    setIsCartOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <AgeVerification isOpen={!isAgeVerified && !showUnderageBlock} onConfirm={handleAgeConfirm} onDeny={handleAgeDeny} />
@@ -263,6 +268,7 @@ function AppContent() {
               eventName={selectedEvent.name}
               drinks={drinks}
               onClose={() => setSelectedEvent(null)}
+              onOpenCart={handleOpenCartFromMenu}
             />
           )}
 
