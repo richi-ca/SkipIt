@@ -20,10 +20,13 @@ import { OrderProvider, useOrders } from './context/OrderContext';
 import OrderTypeSelectionModal from './components/OrderTypeSelectionModal';
 import ManageOrderModal from './components/ManageOrderModal';
 import MultiQRCodeModal from './components/MultiQRCodeModal';
+import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <AuthProvider>
         <CartProvider>
           <OrderProvider>
@@ -131,7 +134,7 @@ function AppContent() {
 
     const cartDrinks = drinks.filter(drink => cartItems[drink.id] > 0);
     const total = cartDrinks.reduce((sum, drink) => sum + (drink.price * cartItems[drink.id]), 0);
-    
+
     const newOrder: Order = {
       orderId: `SK${Date.now().toString().slice(-6)}`,
       userId: user.id,
@@ -203,7 +206,7 @@ function AppContent() {
 
       {isAgeVerified && (
         <>
-          <Header 
+          <Header
             isVisible={isHeaderVisible}
             onOpenLogin={() => setIsLoginOpen(true)}
             onOpenRegister={() => setIsRegisterOpen(true)}
@@ -234,14 +237,14 @@ function AppContent() {
             totalAmount={paymentAmount}
           />
 
-          <OrderTypeSelectionModal 
+          <OrderTypeSelectionModal
             isOpen={isOrderTypeModalOpen}
             onClose={() => setIsOrderTypeModalOpen(false)}
             onSelectSingleQR={handleOpenSingleQR}
             onSelectIndividual={handleOpenManageModal}
           />
 
-          <ManageOrderModal 
+          <ManageOrderModal
             isOpen={isManageOrderModalOpen}
             onClose={() => setIsManageOrderModalOpen(false)}
             order={selectedOrder}
@@ -255,14 +258,14 @@ function AppContent() {
             qrDataList={multiQrData}
           />
 
-          <LoginModal 
-            isOpen={isLoginOpen} 
-            onClose={() => setIsLoginOpen(false)} 
-            onSwitchToRegister={() => { setIsLoginOpen(false); setIsRegisterOpen(true); }} 
+          <LoginModal
+            isOpen={isLoginOpen}
+            onClose={() => setIsLoginOpen(false)}
+            onSwitchToRegister={() => { setIsLoginOpen(false); setIsRegisterOpen(true); }}
             onLoginSuccess={handleLoginSuccess}
           />
           <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} onSwitchToLogin={() => { setIsRegisterOpen(false); setIsLoginOpen(true); }} />
-          
+
           {selectedEvent && (
             <DrinkMenu
               eventName={selectedEvent.name}
@@ -287,43 +290,7 @@ function AppContent() {
             />
           )}
 
-          <footer className="bg-gray-900 text-white py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                  <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold">S</div>
-                    <span className="text-xl font-bold">SkipIT</span>
-                  </div>
-                  <p className="text-gray-400">Salta la fila, disfruta más.</p>
-                </div>
-                <div>
-                  <h3 className="font-bold mb-4">Navegación</h3>
-                  <ul className="space-y-2 text-gray-400">
-                    <li><Link to="/" className="hover:text-white">Inicio</Link></li>
-                    <li><Link to="/events" className="hover:text-white">Eventos</Link></li>
-                    <li><Link to="#quienesSomos?" className="hover:text-white">Quienes Somos?</Link></li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-bold mb-4">Soporte</h3>
-                  <ul className="space-y-2 text-gray-400">
-                    <li><a href="#" className="hover:text-white">Términos</a></li>
-                    <li><a href="#" className="hover:text-white">Privacidad</a></li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-bold mb-4">Síguenos</h3>
-                  <div className="flex space-x-4">
-                    <a href="#" className="text-gray-400 hover:text-white">Instagram</a>
-                  </div>
-                </div>
-              </div>
-              <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; 2025 SkipIT. Todos los derechos reservados.</p>
-              </div>
-            </div>
-          </footer>
+          <Footer />
         </>
       )}
     </div>

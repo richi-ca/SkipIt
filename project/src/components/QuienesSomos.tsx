@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Clock, Users, Zap, Heart, Trophy, Smartphone } from 'lucide-react';
+import logoMision from '../assets/images/Logo00.png';
 
 interface QuienesSomosProps {
   onOpenRegister: () => void;
@@ -43,7 +44,7 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
             </div>
             <div className="relative">
               <img
-                src="https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg"
+                src={logoMision}
                 alt="Personas disfrutando en un evento"
                 className="rounded-2xl shadow-lg w-full h-80 object-cover"
               />
@@ -53,8 +54,9 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
         </div>
 
         {/* Vision */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12">
-          <div className="relative">
+        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12 mt-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="relative">
               <img
                 src="https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg"
                 alt="Personas disfrutando en un evento"
@@ -62,7 +64,6 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-purple-600/20 to-transparent rounded-2xl"></div>
             </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h3 className="text-3xl font-bold text-gray-900 mb-6">
                 Nuestra Visión
@@ -80,7 +81,6 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
                 </span>
               </div>
             </div>
-            
           </div>
         </div>
 

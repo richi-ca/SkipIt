@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { X, User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import TermsModal from './TermsModal';
+import logoSkipIT from '../assets/images/Logo1.png';
+import { Link } from 'react-router-dom';
 
 // --- Sub-componente para el medidor de fortaleza de contraseña ---
 const PasswordStrengthMeter = ({ password }: { password?: string }) => {
@@ -121,11 +123,11 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-purple-600 font-bold text-lg">S</div>
-                <span className="text-xl font-bold">SkipIT</span>
-              </div>
-              <p className="text-purple-100 text-sm">¡Sáltate la fila, y dedícate a disfrutar!</p>
+              {/* Logo */}
+              <Link to="/" className="flex items-center space-x-6">
+                <img src={logoSkipIT} alt="Logo SkipIT" className="h-12" />
+              </Link>
+              <p className="text-purple-100 text-sm pl-1">¡Sáltate la fila, y dedícate a disfrutar!</p>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors" aria-label="Cerrar modal">
               <X className="w-6 h-6" />

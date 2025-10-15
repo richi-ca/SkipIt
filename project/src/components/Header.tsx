@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom'; // Importar useNavigate
-import { Menu, Instagram, ShoppingCart, User as UserIcon, LogOut } from 'lucide-react';
+import { Menu, Instagram, ShoppingCart, User as UserIcon, LogOut, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import ConfirmationModal from './ConfirmationModal'; // Import the modal
+import logoSkipIT from '../assets/images/Logo5.png';
 
 interface HeaderProps {
   onOpenLogin: () => void;
@@ -18,6 +19,7 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
   const navigate = useNavigate(); // Inicializar useNavigate
   const cartItemCount = getTotalItems();
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     setIsLogoutConfirmOpen(true);
@@ -30,7 +32,7 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50 ${
+    `block text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50 ${
       isActive ? 'text-purple-600 bg-purple-100' : ''
     }`;
 
@@ -43,13 +45,8 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-                S
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                SkipIT
-              </span>
+            <Link to="/" className="flex items-center space-x-6">
+              <img src={logoSkipIT} alt="Logo SkipIT" className="h-12" />
             </Link>
 
             {/* Navigation */}
@@ -71,14 +68,7 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
               <Link to="/" state={{ scrollTo: '#como-funciona' }} className="text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50">
                 Cómo Funciona
               </Link>
-              <a 
-                href="https://instagram.com/skipit" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-700 hover:text-pink-600 transition-colors p-2 rounded-lg hover:bg-pink-50"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
+
             </nav>
 
             {/* Actions */}
@@ -115,7 +105,7 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
                 </button>
               </div>
               <div className="lg:hidden">
-                <button className="p-2 text-gray-700 hover:text-purple-600 transition-colors">
+                <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-gray-700 hover:text-purple-600 transition-colors">
                   <Menu className="w-6 h-6" />
                 </button>
               </div>
@@ -123,6 +113,61 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+            <div className="fixed top-0 right-0 h-full w-4/5 max-w-sm bg-white shadow-lg p-6" onClick={(e) => e.stopPropagation()}>
+                {/* Menu Header */}
+                <div className="flex justify-between items-center mb-8">
+                    <span className="text-xl font-bold text-purple-600">Menú</span>
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-2">
+                        <X className="w-6 h-6 text-gray-700" />
+                    </button>
+                </div>
+
+                {/* Navigation Links */}
+                <nav className="flex flex-col space-y-4">
+                    <NavLink to="/" className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)}>
+                        Inicio
+                    </NavLink>
+                    <NavLink to="/events" className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)}>
+                        Eventos
+                    </NavLink>
+                    {isAuthenticated && (
+                        <NavLink to="/history" className={navLinkClass} onClick={() => setIsMobileMenuOpen(false)}>
+                            Mis Pedidos
+                        </NavLink>
+                    )}
+                    <Link to="/" state={{ scrollTo: '#quienes-somos' }} className="block text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50" onClick={() => setIsMobileMenuOpen(false)}>
+                        Quiénes Somos
+                    </Link>
+                    <Link to="/" state={{ scrollTo: '#como-funciona' }} className="block text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50" onClick={() => setIsMobileMenuOpen(false)}>
+                        Cómo Funciona
+                    </Link>
+                </nav>
+
+                {/* Mobile Actions */}
+                <div className="border-t border-gray-200 mt-8 pt-6">
+                    {isAuthenticated && user ? (
+                        <div className="flex items-center space-x-2">
+                            <UserIcon className="w-5 h-5 text-gray-600" />
+                            <span className="font-medium text-gray-700">Hola, {user.name.split(' ')[0]}</span>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col space-y-3">
+                            <button onClick={() => { onOpenLogin(); setIsMobileMenuOpen(false); }} className="w-full text-center text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-3 rounded-lg hover:bg-purple-50">
+                                Inicia Sesión
+                            </button>
+                            <button onClick={() => { onOpenRegister(); setIsMobileMenuOpen(false); }} className="w-full text-center bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-4 py-3 rounded-full transition-all">
+                                Regístrate
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+      )}
 
       <ConfirmationModal
         isOpen={isLogoutConfirmOpen}

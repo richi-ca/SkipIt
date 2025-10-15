@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Minus, X, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import advertenciaImg from '../assets/images/Advertencia.png'; // Import the image
 
 interface Drink {
   id: number;
@@ -105,6 +106,12 @@ export default function DrinkMenu({
               </div>
             </div>
           ))}
+
+          {/* Warning Image */}
+          <div className="mt-8 flex justify-center">
+            <img src={advertenciaImg} alt="Advertencia sobre el consumo de alcohol" className="max-w-[15rem]" />
+          </div>
+
         </div>
 
         {totalItems > 0 && (
