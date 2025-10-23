@@ -23,7 +23,7 @@ export const events: Event[] = [
   {
     id: 1,
     name: "Ultra Music Festival",
-    date: "15 Enero 2025",
+    date: "15 Diciembre 2025",
     time: "20:00 - 06:00",
     location: "Parque O'Higgins, Santiago",
     image: "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg",
@@ -34,7 +34,7 @@ export const events: Event[] = [
   {
     id: 2,
     name: "Noche de Reggaeton",
-    date: "18 Enero 2025",
+    date: "18 Diciembre 2025",
     time: "22:00 - 04:00",
     location: "Club The One, Las Condes",
     image: "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg",
@@ -45,7 +45,7 @@ export const events: Event[] = [
   {
     id: 3,
     name: "Rock en Español",
-    date: "22 Enero 2025",
+    date: "22 Diciembre 2025",
     time: "19:00 - 02:00",
     location: "Teatro Cariola, Santiago",
     image: "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg",
@@ -56,7 +56,7 @@ export const events: Event[] = [
   {
     id: 4,
     name: "Summer Beach Party",
-    date: "25 Enero 2025",
+    date: "25 Diciembre 2025",
     time: "16:00 - 01:00",
     location: "Playa Reñaca, Viña del Mar",
     image: "https://images.pexels.com/photos/1587927/pexels-photo-1587927.jpeg",

@@ -2,12 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Users, Zap } from 'lucide-react';
 import advertenciaImg from '../assets/images/Advertencia.png';
+import advertenciaMovilImg from '../assets/images/Advertencia-movil.png';
 
 export default function Hero() {
   return (
     <div className="relative bg-gradient-to-br from-purple-900 via-purple-700 to-pink-600 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-black opacity-20"></div>
+
+      {/* Imagen de Advertencia (Solo para MÓVIL, Absoluta) */}
+      <div className="absolute top-0 left-0 right-0 z-10 lg:hidden">
+        <img src={advertenciaMovilImg} alt="Advertencia sobre el consumo de alcohol" className="w-full h-auto" />
+      </div>
 
       {/* Imagen de Advertencia (Solo para ESCRITORIO, Absoluta) */}
       <div className="absolute top-3 right-3 z-10 hidden lg:block">
@@ -20,10 +26,6 @@ export default function Hero() {
         {/* Bloque de Texto (Centrado y Ancho) */}
         <div className="text-center max-w-4xl mx-auto">
 
-            {/* Imagen de Advertencia (Solo para MÓVIL, en el flujo normal) */}
-            <div className="lg:hidden flex justify-center mb-6">
-              <img src={advertenciaImg} alt="Advertencia sobre el consumo de alcohol" className="w-[15rem] h-auto" />
-            </div>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white mb-6">
               <span className="block">¡Sáltate la fila,</span>
               <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">

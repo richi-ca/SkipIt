@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import LoginModal from './components/LoginModal';
 import RegisterModal from './components/RegisterModal';
@@ -11,6 +12,8 @@ import UnderageBlock from './components/UnderageBlock';
 import HomePage from './pages/HomePage';
 import EventsPage from './pages/EventsPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
+import ProfilePage from './pages/ProfilePage'; // New import
+import LoginPageHandler from './pages/LoginPageHandler'; // New import
 import { events, drinks, Event, User, Order } from './data/mockData';
 import LoginPrompt from './components/LoginPrompt';
 import PaymentModal from './components/PaymentModal';
@@ -140,9 +143,9 @@ function AppContent() {
       userId: user.id,
       date: new Date().toLocaleDateString(),
       event: selectedEvent || events[0],
-      items: cartDrinks.map(drink => ({
-        drink: drink,
-        quantity: cartItems[drink.id],
+      items: cartDrinks.map(item => ({
+        drink: item, // Corrected: 'item' is already the Drink object
+        quantity: cartItems[item.id], // Corrected: quantity should come from cartItems, not item.quantity
         claimed: 0
       })),
       total: total,
@@ -218,6 +221,8 @@ function AppContent() {
               <Route path="/" element={<HomePage events={events} onSelectEvent={setSelectedEvent} onOpenRegister={() => setIsRegisterOpen(true)} />} />
               <Route path="/events" element={<EventsPage onSelectEvent={setSelectedEvent} />} />
               <Route path="/history" element={<OrderHistoryPage onManageOrder={(order) => { setSelectedOrder(order); setIsManageOrderModalOpen(true); }} />} />
+              <Route path="/profile" element={<ProfilePage />} /> {/* New route */}
+              <Route path="/login" element={<LoginPageHandler onOpenLogin={() => setIsLoginOpen(true)} />} />
             </Routes>
           </main>
 
@@ -261,10 +266,16 @@ function AppContent() {
           <LoginModal
             isOpen={isLoginOpen}
             onClose={() => setIsLoginOpen(false)}
-            onSwitchToRegister={() => { setIsLoginOpen(false); setIsRegisterOpen(true); }}
+            onSwitchToRegister={() => {
+              setIsLoginOpen(false);
+              setIsRegisterOpen(true);
+            }}
             onLoginSuccess={handleLoginSuccess}
           />
-          <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} onSwitchToLogin={() => { setIsRegisterOpen(false); setIsLoginOpen(true); }} />
+          <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} onSwitchToLogin={() => {
+            setIsRegisterOpen(false);
+            setIsLoginOpen(true);
+          }} />
 
           {selectedEvent && (
             <DrinkMenu
@@ -291,6 +302,7 @@ function AppContent() {
           )}
 
           <Footer />
+          <Toaster />
         </>
       )}
     </div>
@@ -298,3 +310,4 @@ function AppContent() {
 }
 
 export default App;
+

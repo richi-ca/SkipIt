@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Hero from '../components/Hero';
 import QuienesSomos from '../components/QuienesSomos';
-import EventCard from '../components/EventCard';
+import EventCarousel from '../components/EventCarousel';
 import Promotions from '../components/Promotions';
 import { Event } from '../data/mockData';
 
@@ -40,15 +40,7 @@ export default function HomePage({ events, onSelectEvent, onOpenRegister }: Home
               Encuentra tu evento favorito y precompra tus tragos
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-            {events.slice(0, 2).map(event => (
-              <EventCard 
-                key={event.id} 
-                event={event} 
-                onSelect={onSelectEvent}
-              />
-            ))}
-          </div>
+          <EventCarousel events={events} onSelectEvent={onSelectEvent} />
         </div>
       </section>
       <Promotions />
