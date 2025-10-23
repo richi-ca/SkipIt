@@ -33,7 +33,8 @@ export default function Hero() {
               </span>
             </h1>
             <p className="text-xl sm:text-2xl text-gray-200 mb-8">
-              Precompra tus tragos favoritos y canjéalos al instante con tu código QR. 
+              Precompra tus tragos favoritos y canjéalos al instante con tu código QR.
+              <br />
               Para nosotros tu tiempo es oro…¡Gástalo bailando con SkipIT!
             </p>
           </div>
