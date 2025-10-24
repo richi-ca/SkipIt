@@ -80,7 +80,7 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events, onSelectEvent }) 
     .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
     .slice(0, 5);
 
-  const slidesToShow = screenWidth < 768 ? 1 : 2;
+  const slidesToShow = screenWidth < 1024 ? 1 : 2;
 
   const settings = {
     dots: true,
