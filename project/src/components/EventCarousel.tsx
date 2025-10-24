@@ -5,6 +5,7 @@ import { Event } from '../data/mockData';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useScreenWidth } from '../hooks/useScreenWidth';
 
 interface EventCarouselProps {
   events: Event[];
@@ -68,6 +69,8 @@ const PrevArrow = (props: any) => {
 };
 
 const EventCarousel: React.FC<EventCarouselProps> = ({ events, onSelectEvent }) => {
+  const screenWidth = useScreenWidth();
+
   const upcomingEvents = events
     .map(event => ({
       ...event,
@@ -77,24 +80,18 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events, onSelectEvent }) 
     .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
     .slice(0, 5);
 
+  const slidesToShow = screenWidth < 768 ? 1 : 2;
+
   const settings = {
     dots: true,
-    infinite: upcomingEvents.length > 2,
+    infinite: upcomingEvents.length > slidesToShow,
     speed: 500,
-    slidesToShow: 2,
+    slidesToShow: slidesToShow,
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 5000,
     nextArrow: <NextArrow />,
     prevArrow: <PrevArrow />,
-    responsive: [
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 1,
-        },
-      },
-    ],
   };
 
   if (upcomingEvents.length === 0) {
