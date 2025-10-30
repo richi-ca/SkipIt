@@ -38,7 +38,7 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
                   <Heart className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-lg font-semibold text-gray-900">
-                  Más diversión, menos espera
+                  Menos espera, más diversión
                 </span>
               </div>
             </div>
@@ -70,14 +70,14 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
               </h3>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
                 Convertirnos en un ícono de la cultura de la entretención moderna, inspirando una nueva forma de disfrutar los eventos masivos:
-                <span className="font-semibold text-purple-600"> sin esperas, con menos filas, y creando momentos inolvidables.</span>.
+                <span className="font-semibold text-purple-600"> sin esperas, menos filas y pasándolo increíble.</span>
               </p>
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
                   <Heart className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-lg font-semibold text-gray-900">
-                  Más diversión, menos espera
+                  Dedicarnos 100% a celebrar
                 </span>
               </div>
             </div>

@@ -177,6 +177,9 @@ export interface User {
   name: string;
   email: string;
   hasPriorityAccess: boolean;
+  dob?: string; // Date of Birth
+  gender?: 'M' | 'F' | 'Otro';
+  phone?: string;
 }
 
 export const users: User[] = [

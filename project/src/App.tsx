@@ -25,19 +25,24 @@ import ManageOrderModal from './components/ManageOrderModal';
 import MultiQRCodeModal from './components/MultiQRCodeModal';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { es } from 'date-fns/locale';
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <AuthProvider>
-        <CartProvider>
-          <OrderProvider>
-            <AppContent />
-          </OrderProvider>
-        </CartProvider>
-      </AuthProvider>
-    </Router>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+      <Router>
+        <ScrollToTop />
+        <AuthProvider>
+          <CartProvider>
+            <OrderProvider>
+              <AppContent />
+            </OrderProvider>
+          </CartProvider>
+        </AuthProvider>
+      </Router>
+    </LocalizationProvider>
   );
 }
 
@@ -69,8 +74,12 @@ function AppContent() {
   const [multiQrData, setMultiQrData] = useState<any[]>([]);
 
   const handleAgeConfirm = () => {
+    const verificationData = {
+      verified: true,
+      timestamp: new Date().getTime(),
+    };
+    localStorage.setItem('ageVerified', JSON.stringify(verificationData));
     setIsAgeVerified(true);
-    localStorage.setItem('ageVerified', 'true');
   };
 
   const handleAgeDeny = () => {
@@ -91,9 +100,23 @@ function AppContent() {
   };
 
   useEffect(() => {
-    const ageVerified = localStorage.getItem('ageVerified');
-    if (ageVerified === 'true') {
-      setIsAgeVerified(true);
+    const verificationDataString = localStorage.getItem('ageVerified');
+    if (verificationDataString) {
+      try {
+        const verificationData = JSON.parse(verificationDataString);
+        const now = new Date().getTime();
+        const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000; // 7 días
+
+        if (verificationData.verified && (now - verificationData.timestamp < sevenDaysInMillis)) {
+          setIsAgeVerified(true);
+        } else {
+          // Si ha expirado, se elimina el item para la siguiente comprobación.
+          localStorage.removeItem('ageVerified');
+        }
+      } catch (error) {
+        // Si hay un error en los datos guardados, se limpian.
+        localStorage.removeItem('ageVerified');
+      }
     }
   }, []);
 
@@ -127,7 +150,8 @@ function AppContent() {
       setActionAfterLogin(() => openPaymentModal);
       setIsCartOpen(false);
       setIsLoginPromptOpen(true);
-    } else {
+    }
+    else {
       openPaymentModal();
     }
   };

@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { X, User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import TermsModal from './TermsModal';
 import logoSkipIT from '../assets/images/Logo1.png';
 import { Link } from 'react-router-dom';
+import CustomDropdown from './CustomDropdown';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TextField } from '@mui/material';
+import { format } from 'date-fns';
 
 // --- Sub-componente para el medidor de fortaleza de contraseña ---
 const PasswordStrengthMeter = ({ password }: { password?: string }) => {
@@ -36,10 +40,19 @@ interface IFormInput {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
+  dob: Date | null;
+  gender: string;
   password: string;
   confirmPassword: string;
   acceptTerms: boolean;
 }
+
+const genderOptions = [
+  { value: 'M', label: 'Masculino' },
+  { value: 'F', label: 'Femenino' },
+  { value: 'Otro', label: 'Otro' },
+];
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -59,9 +72,22 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     formState: { errors, isSubmitting },
     reset,
     watch,
-    getValues,
+    control,
     setFocus,
-  } = useForm<IFormInput>({ mode: 'onBlur' });
+  } = useForm<IFormInput>({ 
+    mode: 'onBlur',
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      dob: null,
+      gender: '',
+      password: '',
+      confirmPassword: '',
+      acceptTerms: false,
+    }
+  });
 
   const passwordValue = watch('password');
 
@@ -96,6 +122,9 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
       id: Date.now(),
       name: `${data.firstName} ${data.lastName}`,
       email: data.email,
+      phone: data.phone,
+      dob: data.dob ? format(data.dob, 'yyyy-MM-dd') : null,
+      gender: data.gender,
       password_hash: data.password,
     };
 
@@ -123,7 +152,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              {/* Logo */}
               <Link to="/" className="flex items-center space-x-6">
                 <img src={logoSkipIT} alt="Logo SkipIT" className="h-12" />
               </Link>
@@ -152,14 +180,14 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input id="firstName" type="text" autoComplete="given-name" {...register('firstName', { required: 'El nombre es obligatorio.' })} className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.firstName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Tu nombre" aria-invalid={errors.firstName ? 'true' : 'false'} aria-describedby="firstName-error" />
+                  <input id="firstName" type="text" autoComplete="given-name" {...register('firstName', { required: 'El nombre es obligatorio.' })} className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.firstName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Tu nombre" />
                 </div>
-                {errors.firstName && <p id="firstName-error" role="alert" className="text-sm text-red-600 mt-2">{errors.firstName.message}</p>}
+                {errors.firstName && <p role="alert" className="text-sm text-red-600 mt-2">{errors.firstName.message}</p>}
               </div>
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">Apellido</label>
-                <input id="lastName" type="text" autoComplete="family-name" {...register('lastName', { required: 'El apellido es obligatorio.' })} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.lastName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Tu apellido" aria-invalid={errors.lastName ? 'true' : 'false'} aria-describedby="lastName-error" />
-                {errors.lastName && <p id="lastName-error" role="alert" className="text-sm text-red-600 mt-2">{errors.lastName.message}</p>}
+                <input id="lastName" type="text" autoComplete="family-name" {...register('lastName', { required: 'El apellido es obligatorio.' })} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.lastName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Tu apellido" />
+                {errors.lastName && <p role="alert" className="text-sm text-red-600 mt-2">{errors.lastName.message}</p>}
               </div>
             </div>
 
@@ -167,21 +195,79 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               <label htmlFor="email-register" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input id="email-register" type="email" autoComplete="email" {...register('email', { required: 'El email es obligatorio.', pattern: { value: /\S+@\S+\.\S+/, message: 'El formato del email no es válido.' } })} className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="tu@email.com" aria-invalid={errors.email ? 'true' : 'false'} aria-describedby="email-register-error" />
+                <input id="email-register" type="email" autoComplete="email" {...register('email', { required: 'El email es obligatorio.', pattern: { value: /\S+@\S+\.\S+/, message: 'El formato del email no es válido.' } })} className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="tu@email.com" />
               </div>
-              {errors.email && <p id="email-register-error" role="alert" className="text-sm text-red-600 mt-2">{errors.email.message}</p>}
+              {errors.email && <p role="alert" className="text-sm text-red-600 mt-2">{errors.email.message}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">Teléfono Celular</label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">+56</span>
+                <input id="phone" type="tel" {...register('phone', { required: 'El teléfono es obligatorio.', pattern: { value: /^9[0-9]{8}$/, message: 'Debe ser un número de 9 dígitos comenzando con 9.' } })} className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="9 1234 5678" />
+              </div>
+              {errors.phone && <p role="alert" className="text-sm text-red-600 mt-2">{errors.phone.message}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-2">Fecha de Nacimiento</label>
+                <Controller
+                  name="dob"
+                  control={control}
+                  rules={{ required: 'La fecha es obligatoria.' }}
+                  render={({ field, fieldState: { error } }) => (
+                    <DatePicker
+                      {...field}
+                      disableFuture
+                      openTo="year"
+                      views={['year', 'month', 'day']}
+                      value={field.value || null}
+                      onChange={(newValue) => field.onChange(newValue)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          error: !!error,
+                          helperText: error?.message,
+                          sx: {
+                            '& .MuiInputBase-root': { borderRadius: '0.5rem', backgroundColor: 'white' },
+                            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#D1D5DB' },
+                            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9CA3AF' },
+                          }
+                        }
+                      }}
+                    />
+                  )}
+                />
+              </div>
+              <div>
+                <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">Sexo</label>
+                <Controller
+                  name="gender"
+                  control={control}
+                  rules={{ required: 'El sexo es obligatorio.' }}
+                  render={({ field }) => (
+                    <CustomDropdown
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={genderOptions}
+                    />
+                  )}
+                />
+                {errors.gender && <p role="alert" className="text-sm text-red-600 mt-2">{errors.gender.message}</p>}
+              </div>
             </div>
 
             <div>
               <label htmlFor="password-register" className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input id="password-register" type={showPassword ? 'text' : 'password'} autoComplete="new-password" {...register('password', { required: 'La contraseña es obligatoria.', minLength: { value: 8, message: 'Debe tener al menos 8 caracteres.' } })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Mínimo 8 caracteres" aria-invalid={errors.password ? 'true' : 'false'} aria-describedby="password-register-error" />
+                <input id="password-register" type={showPassword ? 'text' : 'password'} autoComplete="new-password" {...register('password', { required: 'La contraseña es obligatoria.', minLength: { value: 8, message: 'Debe tener al menos 8 caracteres.' } })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Mínimo 8 caracteres" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {errors.password && <p id="password-register-error" role="alert" className="text-sm text-red-600 mt-2">{errors.password.message}</p>}
+              {errors.password && <p role="alert" className="text-sm text-red-600 mt-2">{errors.password.message}</p>}
               <PasswordStrengthMeter password={passwordValue} />
             </div>
 
@@ -189,22 +275,22 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" {...register('confirmPassword', { required: 'Confirma tu contraseña.', validate: value => value === getValues('password') || 'Las contraseñas no coinciden.' })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Repite tu contraseña" aria-invalid={errors.confirmPassword ? 'true' : 'false'} aria-describedby="confirmPassword-error" />
+                <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" {...register('confirmPassword', { required: 'Confirma tu contraseña.', validate: (value) => value === passwordValue || 'Las contraseñas no coinciden.' })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Repite tu contraseña" />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              {errors.confirmPassword && <p id="confirmPassword-error" role="alert" className="text-sm text-red-600 mt-2">{errors.confirmPassword.message}</p>}
+              {errors.confirmPassword && <p role="alert" className="text-sm text-red-600 mt-2">{errors.confirmPassword.message}</p>}
             </div>
 
             <div className="flex items-start space-x-3">
-              <input id="acceptTerms" type="checkbox" {...register('acceptTerms', { required: 'Debes aceptar los términos.' })} className="mt-1 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500" aria-describedby="acceptTerms-error" />
+              <input id="acceptTerms" type="checkbox" {...register('acceptTerms', { required: 'Debes aceptar los términos.' })} className="mt-1 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500" />
               <div className="text-sm">
-                <label htmlFor="acceptTerms" className="text-gray-600">Acepto los{' '}</label>
+                <label htmlFor="acceptTerms" className="text-gray-600">Acepto los {' '}</label>
                 <button type="button" onClick={() => setShowTerms(true)} className="text-purple-600 hover:text-purple-700 font-medium underline">términos y condiciones</button>
               </div>
             </div>
-            {errors.acceptTerms && <p id="acceptTerms-error" role="alert" className="text-sm text-red-600">{errors.acceptTerms.message}</p>}
+            {errors.acceptTerms && <p role="alert" className="text-sm text-red-600">{errors.acceptTerms.message}</p>}
 
             <button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-4 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed disabled:scale-100">
               {isSubmitting ? (
@@ -222,7 +308,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">¿Ya tienes cuenta?{' '}<button onClick={onSwitchToLogin} className="text-purple-600 hover:text-purple-700 font-medium">Inicia sesión aquí</button></p>
+            <p className="text-gray-600">¿Ya tienes cuenta? {' '}<button onClick={onSwitchToLogin} className="text-purple-600 hover:text-purple-700 font-medium">Inicia sesión aquí</button></p>
           </div>
         </div>
 
