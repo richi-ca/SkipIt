@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, AlertTriangle } from 'lucide-react';
+import logoSkipIT from '../assets/images/Logo1.png'; // Import the standard logo
 
 interface AgeVerificationProps {
   isOpen: boolean;
@@ -18,13 +19,11 @@ export default function AgeVerification({ isOpen, onConfirm, onDeny }: AgeVerifi
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Calendar className="w-8 h-8" />
           </div>
-          <div className="flex items-center space-x-2 justify-center mb-2">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-purple-600 font-bold text-lg">
-              S
-            </div>
-            <span className="text-2xl font-bold">SkipIT</span>
+          {/* Replaced Logo */}
+          <div className="flex items-center justify-center mb-2">
+            <img src={logoSkipIT} alt="Logo SkipIT" className="h-12" />
           </div>
-          <p className="text-purple-100 text-sm">SALTA LA FILA, DISFRUTA MÁS</p>
+          <p className="text-purple-100 text-sm">SÁLTATE LA FILA, DISFRUTA MÁS</p>
         </div>
 
         {/* Content */}

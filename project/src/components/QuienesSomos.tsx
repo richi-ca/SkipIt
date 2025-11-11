@@ -29,7 +29,7 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
                 Nuestra Misión
               </h3>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Transformar la experiencia en eventos masivos eliminando las largas filas en las barras.
+                Transformar la experiencia en eventos masivos eliminando las largas filas en las cajas.
                 Creemos que tu tiempo es valioso y debe dedicarse a lo que realmente importa:
                 <span className="font-semibold text-purple-600"> disfrutar, bailar y crear recuerdos inolvidables</span>.
               </p>

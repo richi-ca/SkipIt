@@ -28,8 +28,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    setFocus,
-    getValues,
   } = useForm<IFormInput>({
     mode: 'onBlur', // Activa la validación cuando se pierde el foco
     defaultValues: {
@@ -42,15 +40,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
   // Efecto para manejar el foco, cierre con Escape y limpiar el formulario
   useEffect(() => {
     if (isOpen) {
-      // Auto-foco inteligente
-      setTimeout(() => {
-        if (getValues('email')) {
-          setFocus('password');
-        } else {
-          setFocus('email');
-        }
-      }, 100);
-
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           onClose();
@@ -72,7 +61,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
         setShowPassword(false);
       }, 200);
     }
-  }, [isOpen, onClose, reset, setFocus, getValues]);
+  }, [isOpen, onClose, reset]);
 
   if (!isOpen) return null;
 

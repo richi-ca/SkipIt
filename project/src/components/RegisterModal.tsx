@@ -5,9 +5,12 @@ import TermsModal from './TermsModal';
 import logoSkipIT from '../assets/images/Logo1.png';
 import { Link } from 'react-router-dom';
 import CustomDropdown from './CustomDropdown';
+import CustomCountrySelect from './CustomCountrySelect';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TextField } from '@mui/material';
-import { format } from 'date-fns';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import { format, subYears } from 'date-fns';
 
 // --- Sub-componente para el medidor de fortaleza de contraseña ---
 const PasswordStrengthMeter = ({ password }: { password?: string }) => {
@@ -34,6 +37,11 @@ const PasswordStrengthMeter = ({ password }: { password?: string }) => {
     </div>
   );
 };
+
+// --- Componente personalizado para el input del teléfono ---
+const CustomPhoneInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>((props, ref) => (
+  <input {...props} ref={ref} className="w-full h-full focus:outline-none focus:ring-0 border-none bg-transparent py-3" />
+));
 
 // --- Tipos y componente principal ---
 interface IFormInput {
@@ -65,6 +73,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [formSuccess, setFormSuccess] = useState('');
+  const maxDate = subYears(new Date(), 18);
 
   const {
     register,
@@ -73,7 +82,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     reset,
     watch,
     control,
-    setFocus,
   } = useForm<IFormInput>({ 
     mode: 'onBlur',
     defaultValues: {
@@ -93,10 +101,6 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => {
-        setFocus('firstName');
-      }, 100);
-
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') onClose();
       };
@@ -110,7 +114,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
         setShowConfirmPassword(false);
       }, 200);
     }
-  }, [isOpen, onClose, reset, setFocus]);
+  }, [isOpen, onClose, reset]);
 
   if (!isOpen) return null;
 
@@ -163,7 +167,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           </div>
         </div>
 
-        <div className="p-6 max-h-[605px] overflow-y-auto custom-scrollbar">
+        <div className="p-6 max-h-[605px] overflow-y-auto scrollbar-width-none [&::-webkit-scrollbar]:hidden">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">¡Únete a SkipIT!</h2>
           <p className="text-gray-600 text-center mb-6">Crea tu cuenta y empieza a disfrutar sin filas</p>
 
@@ -202,10 +206,23 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">Teléfono Celular</label>
-              <div className="relative flex items-center">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">+56</span>
-                <input id="phone" type="tel" {...register('phone', { required: 'El teléfono es obligatorio.', pattern: { value: /^9[0-9]{8}$/, message: 'Debe ser un número de 9 dígitos comenzando con 9.' } })} className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="9 1234 5678" />
-              </div>
+              <Controller
+                name="phone"
+                control={control}
+                rules={{ required: 'El teléfono es obligatorio.' }}
+                render={({ field, fieldState: { error } }) => (
+                  <PhoneInput
+                    {...field}
+                    international
+                    defaultCountry="CL"
+                    countryCallingCodeEditable={false}
+                    countrySelectComponent={CustomCountrySelect}
+                    inputComponent={CustomPhoneInput}
+                    className={`flex items-center w-full bg-white border rounded-lg shadow-sm transition-all duration-200 ${error ? 'border-red-500' : 'border-gray-300 hover:border-gray-400'} focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-transparent`}
+                    placeholder="Ingresa tu número"
+                  />
+                )}
+              />
               {errors.phone && <p role="alert" className="text-sm text-red-600 mt-2">{errors.phone.message}</p>}
             </div>
 
@@ -220,6 +237,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                     <DatePicker
                       {...field}
                       disableFuture
+                      maxDate={maxDate}
                       openTo="year"
                       views={['year', 'month', 'day']}
                       value={field.value || null}

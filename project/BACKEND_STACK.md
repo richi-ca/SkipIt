@@ -1,4 +1,3 @@
-
 # Propuesta de Stack Tecnológico para el Backend de SkipIT
 
 ## 1. Introducción

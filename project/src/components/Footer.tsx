@@ -23,10 +23,6 @@ export default function Footer() {
                           </Link>
                         </div>
                         <p className="text-gray-400">¡Sáltate la fila, y dedícate a disfrutar!</p>
-                        <div className="mt-8">
-                          {/* <h3 className="font-bold text-gray-400 mb-4">Métodos de Pago</h3> */}
-                          <img src="https://publico.transbank.cl/documents/20129/38535804/logo_tbk.svg" alt="Webpay" className="h-8 bg-white p-1 rounded" />
-                        </div>
                       </div>            <div>
               <h3 className="font-bold mb-4">Navegación</h3>
               <ul className="space-y-2 text-gray-400">
@@ -57,13 +53,17 @@ export default function Footer() {
             </div>
             <div>
               <h3 className="font-bold mb-4">Síguenos</h3>
-              <div className="flex space-x-4">
-                <a href="https://instagram.com/skipit" target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white flex items-center gap-2">
-                  <Instagram className="w-5 h-5" />
-                  <span>Instagram</span>
-                </a>
-              </div>
-            </div>
+                                <div className="flex space-x-4">
+                                  <a href="https://www.instagram.com/skipit__cl/" target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white flex items-center gap-2">
+                                    <Instagram className="w-5 h-5" />
+                                    <span>Instagram</span>
+                                  </a>
+                                </div>
+                                <div className="border-t border-gray-700 my-4"></div> {/* The new divider */}
+                                <h3 className="font-bold mb-4">Métodos de Pago</h3>
+                                <div>
+                                  <img src="https://publico.transbank.cl/documents/20129/38535804/logo_tbk.svg" alt="Webpay" className="h-8 bg-white p-1 rounded" />
+                                </div>            </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
             <p>&copy; 2025 SkipIT. Todos los derechos reservados.</p>

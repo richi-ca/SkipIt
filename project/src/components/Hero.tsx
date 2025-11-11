@@ -59,7 +59,9 @@ export default function Hero() {
             <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 text-center">
               <Clock className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Ahorra Tiempo</h3>
-              <p className="text-gray-200">No más esperas en la barra. Canjea tu trago al instante.</p>
+              <p className="text-gray-200">No más espera en la caja.
+                <br />
+                Canjea tu trago directo en la barra.</p>
             </div>
             
             <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 text-center">
