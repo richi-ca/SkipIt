@@ -51,6 +51,8 @@ export default function PaymentModal({ isOpen, onClose, onPaymentSuccess, totalA
             <div className="flex items-center">
               <CreditCard className="w-6 h-6 text-gray-400 mr-3" />
               <input 
+                id="cardNumber"
+                name="cardNumber"
                 type="text" 
                 placeholder="4922 0000 0000 0000" 
                 disabled 
@@ -59,12 +61,16 @@ export default function PaymentModal({ isOpen, onClose, onPaymentSuccess, totalA
             </div>
             <div className="grid grid-cols-2 gap-4">
               <input 
+                id="cardExpiry"
+                name="cardExpiry"
                 type="text" 
                 placeholder="MM/YY" 
                 disabled 
                 className="w-full bg-gray-200 text-gray-500 rounded-md p-2 cursor-not-allowed"
               />
               <input 
+                id="cardCvc"
+                name="cardCvc"
                 type="text" 
                 placeholder="CVC" 
                 disabled 

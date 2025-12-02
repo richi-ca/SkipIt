@@ -1,12 +1,41 @@
 import { Link } from 'react-router-dom';
-import { Clock, Users, Zap, Heart, Trophy, Smartphone } from 'lucide-react';
+import { Zap, Heart, Trophy, Smartphone } from 'lucide-react';
 import logoMision from '../assets/images/Logo00.png';
+import imageVision from '../assets/images/Image1.jpeg';
+import { siteContent } from '../data/mockData';
 
 interface QuienesSomosProps {
   onOpenRegister: () => void;
 }
 
+// Helper para resaltar texto
+const renderWithHighlight = (text: string, highlight: string) => {
+  if (!highlight) return text;
+  const parts = text.split(highlight);
+  return (
+    <span>
+      {parts.map((part, index) => (
+        <span key={index}>
+          {part}
+          {index < parts.length - 1 && (
+            <span className="font-semibold text-purple-600">{highlight}</span>
+          )}
+        </span>
+      ))}
+    </span>
+  );
+};
+
 export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
+  const { about } = siteContent;
+
+  const iconMap = [Smartphone, Trophy, Zap];
+  const gradientMap = [
+    'from-blue-500 to-purple-600',
+    'from-purple-600 to-pink-600',
+    'from-pink-600 to-orange-500'
+  ];
+
   return (
     <section id="quienes-somos" className="py-20 bg-gradient-to-br from-purple-50 to-pink-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,9 +58,7 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
                 Nuestra Misión
               </h3>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Transformar la experiencia en eventos masivos eliminando las largas filas en las cajas.
-                Creemos que tu tiempo es valioso y debe dedicarse a lo que realmente importa:
-                <span className="font-semibold text-purple-600"> disfrutar, bailar y crear recuerdos inolvidables</span>.
+                {renderWithHighlight(about.mission.text, about.mission.highlight)}
               </p>
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
@@ -58,7 +85,7 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
               <img
-                src="https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg"
+                src={imageVision}
                 alt="Personas disfrutando en un evento"
                 className="rounded-2xl shadow-lg w-full h-80 object-cover"
               />
@@ -69,8 +96,7 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
                 Nuestra Visión
               </h3>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Convertirnos en un ícono de la cultura de la entretención moderna, inspirando una nueva forma de disfrutar los eventos masivos:
-                <span className="font-semibold text-purple-600"> sin esperas, menos filas y pasándolo increíble.</span>
+                {about.vision.text}
               </p>
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
@@ -90,35 +116,22 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
             ¿Cómo Funciona?
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Smartphone className="w-10 h-10 text-white" />
-              </div>
-              <h4 className="text-xl font-bold text-gray-900 mb-4">1. Precompra</h4>
-              <p className="text-gray-600">
-                Selecciona tu evento favorito y precompra tus tragos desde la comodidad de tu casa o mientras vas camino al evento.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Trophy className="w-10 h-10 text-white" />
-              </div>
-              <h4 className="text-xl font-bold text-gray-900 mb-4">2. Recibe tu QR</h4>
-              <p className="text-gray-600">
-                Una vez confirmada tu compra, recibes un código QR único que contiene todos tus tragos precomprados.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-pink-600 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Zap className="w-10 h-10 text-white" />
-              </div>
-              <h4 className="text-xl font-bold text-gray-900 mb-4">3. Canjea al Instante</h4>
-              <p className="text-gray-600">
-                Llega al evento, muestra tu QR en la barra y recibe tus tragos inmediatamente. ¡Sin filas, sin esperas!
-              </p>
-            </div>
+            {about.steps.map((step, index) => {
+              const Icon = iconMap[index] || Zap;
+              const gradient = gradientMap[index] || gradientMap[0];
+              
+              return (
+                <div key={step.stepNumber} className="text-center">
+                  <div className={`w-20 h-20 bg-gradient-to-r ${gradient} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                    <Icon className="w-10 h-10 text-white" />
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-4">{step.stepNumber}. {step.title}</h4>
+                  <p className="text-gray-600">
+                    {step.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
 

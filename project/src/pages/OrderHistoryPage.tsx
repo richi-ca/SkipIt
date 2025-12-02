@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
 import { useOrders } from '../context/OrderContext';
 import { Order } from '../data/mockData';
 import OrderSummaryCard from '../components/OrderSummaryCard';
@@ -12,9 +11,14 @@ interface OrderHistoryPageProps {
   onManageOrder: (order: Order) => void;
 }
 
+// Helper para crear fecha local sin problemas de zona horaria
+const parseIsoDateToLocal = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({ onManageOrder }) => {
   const { user } = useAuth();
-  const { repeatOrder } = useCart();
   const { orders: allOrders } = useOrders();
 
   const [filtroEvento, setFiltroEvento] = useState('todos');
@@ -34,15 +38,33 @@ const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({ onManageOrder }) =>
   }, [userOrders]);
 
   const opcionesMes = useMemo(() => {
-    const meses = userOrders.map(order => new Date(order.date).toLocaleString('es-ES', { month: 'long' }));
-    return [...new Set(meses)];
+    const mesesMap = new Map<string, { value: string; label: string }>();
+    
+    userOrders.forEach(order => {
+      // Robust extraction: YYYY-MM from ISO date (e.g., "2025-11")
+      const isoMonth = order.isoDate.substring(0, 7);
+      
+      if (!mesesMap.has(isoMonth)) {
+        const date = parseIsoDateToLocal(order.isoDate);
+        // Robust display formatting
+        const label = date.toLocaleString('es-CL', { month: 'long', year: 'numeric' });
+        const labelCapitalized = label.charAt(0).toUpperCase() + label.slice(1);
+        
+        mesesMap.set(isoMonth, { value: isoMonth, label: labelCapitalized });
+      }
+    });
+
+    // Return sorted options (Newest first)
+    return Array.from(mesesMap.values()).sort((a, b) => b.value.localeCompare(a.value));
   }, [userOrders]);
 
   const pedidosFiltrados = useMemo(() => {
     return userOrders.filter(order => {
       const pasaFiltroEvento = filtroEvento === 'todos' || order.event.id.toString() === filtroEvento;
-      const mesPedido = new Date(order.date).toLocaleString('es-ES', { month: 'long' });
-      const pasaFiltroMes = filtroMes === 'todos' || mesPedido === filtroMes;
+      
+      // Robust filtering: Check if ISO date starts with the selected YYYY-MM value
+      const pasaFiltroMes = filtroMes === 'todos' || order.isoDate.startsWith(filtroMes);
+      
       return pasaFiltroEvento && pasaFiltroMes;
     });
   }, [userOrders, filtroEvento, filtroMes]);
@@ -57,8 +79,9 @@ const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({ onManageOrder }) =>
     setSelectedOrderData(null);
   };
 
-  const handleRepeatOrder = (order: Order) => {
-    repeatOrder(order.items);
+  const handleRepeatOrder = () => {
+    // repeatOrder(order.items);
+    console.log("Repetir orden pendiente de implementación backend");
   };
 
   if (!user) {
@@ -68,7 +91,7 @@ const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({ onManageOrder }) =>
           title="Inicia sesión para ver tu historial"
           message="Parece que no has iniciado sesión. ¡Ingresa para ver tus compras pasadas!"
           buttonText="Iniciar Sesión"
-          buttonLink="/"
+          buttonLink="/login"
         />
       </div>
     );
@@ -119,7 +142,7 @@ const OrderHistoryPage: React.FC<OrderHistoryPageProps> = ({ onManageOrder }) =>
           orderNumber={selectedOrderData.orderId}
           eventName={selectedOrderData.event.name}
           total={selectedOrderData.total}
-          drinks={selectedOrderData.items.map(item => `${item.quantity}x ${item.drink.name}`)}
+          drinks={selectedOrderData.items.map(item => `${item.quantity}x ${item.productName} (${item.variationName})`)}
         />
       )}
     </div>

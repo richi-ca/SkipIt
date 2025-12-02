@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { User as UserIcon, LogOut, ShoppingBag, Settings } from 'lucide-react';
+import { User as UserIcon, LogOut, ShoppingBag, Settings, LayoutDashboard } from 'lucide-react';
 
 interface UserMenuDropdownProps {
-  user: { name: string; email: string }; // Assuming user has name and email
+  user: { name: string; email: string; role?: string }; // Updated to include role
   onOpenLogin: () => void;
   onOpenRegister: () => void;
   onLogout: () => void; // New prop for logout handler
@@ -81,7 +81,17 @@ export default function UserMenuDropdown({
             <ShoppingBag className="inline-block w-4 h-4 mr-2" />
             Mis Pedidos
           </NavLink>
-          <button onClick={handleLogout} className={`${navLinkClass} w-full text-left`}>
+          
+          {user.role === 'admin' && (
+            <Link to="/admin" className={`${navLinkClass} text-purple-700 font-semibold bg-purple-50`} onClick={() => setIsDropdownOpen(false)}>
+              <LayoutDashboard className="inline-block w-4 h-4 mr-2" />
+              Panel Admin
+            </Link>
+          )}
+
+          <div className="border-t border-gray-100 my-1"></div>
+          
+          <button onClick={handleLogout} className={`${navLinkClass} w-full text-left text-red-600 hover:bg-red-50 hover:text-red-700`}>
             <LogOut className="inline-block w-4 h-4 mr-2" />
             Salir
           </button>

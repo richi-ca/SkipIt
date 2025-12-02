@@ -8,9 +8,10 @@ interface ConfirmationModalProps {
   title: string;
   message: string;
   confirmText?: string;
+  cancelText?: string;
 }
 
-export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirmar' }: ConfirmationModalProps) {
+export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirmar', cancelText = 'Cancelar' }: ConfirmationModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -41,7 +42,7 @@ export default function ConfirmationModal({ isOpen, onClose, onConfirm, title, m
             onClick={onClose}
             className="px-6 py-2 border border-gray-300 rounded-full text-gray-700 font-semibold hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
-            Cancelar
+            {cancelText}
           </button>
           <button
             onClick={onConfirm}

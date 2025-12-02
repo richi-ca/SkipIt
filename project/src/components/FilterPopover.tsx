@@ -9,7 +9,7 @@ interface FilterPopoverProps {
   opcionesEvento: { id: number; name: string }[];
   filtroMes: string;
   setFiltroMes: (value: string) => void;
-  opcionesMes: string[];
+  opcionesMes: { value: string; label: string }[];
 }
 
 const FilterPopover = (props: FilterPopoverProps) => {
@@ -47,7 +47,7 @@ const FilterPopover = (props: FilterPopoverProps) => {
 
   const opcionesMesFormato = [
     { value: 'todos', label: 'Todos los meses' },
-    ...opcionesMes.map(m => ({ value: m, label: m.charAt(0).toUpperCase() + m.slice(1) }))
+    ...opcionesMes
   ];
 
   return (

@@ -5,7 +5,7 @@ interface OrderContextType {
   orders: Order[];
   activeQRs: { [orderId: string]: any[] };
   addOrder: (newOrder: Order) => void;
-  claimItems: (orderId: string, itemsToClaim: { drinkId: number; quantity: number }[]) => void;
+  claimItems: (orderId: string, itemsToClaim: { variationId: number; quantity: number }[]) => void;
   claimFullOrder: (orderId: string) => void;
   storeActiveQRs: (orderId: string, qrDataList: any[]) => void;
   markQrAsUsed: (qrId: string) => void;
@@ -21,12 +21,12 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     setOrders(prevOrders => [...prevOrders, newOrder]);
   };
 
-  const claimItems = (orderId: string, itemsToClaim: { drinkId: number; quantity: number }[]) => {
+  const claimItems = (orderId: string, itemsToClaim: { variationId: number; quantity: number }[]) => {
     setOrders(prevOrders =>
       prevOrders.map(order => {
         if (order.orderId === orderId) {
           const newItems = order.items.map(item => {
-            const claim = itemsToClaim.find(c => c.drinkId === item.drink.id);
+            const claim = itemsToClaim.find(c => c.variationId === item.variationId);
             if (claim) {
               return { ...item, claimed: (item.claimed || 0) + claim.quantity };
             }

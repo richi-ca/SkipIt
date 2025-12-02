@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Order } from '../data/mockData';
 import { useOrders } from '../context/OrderContext';
-import { X, SlidersHorizontal, QrCode, Plus, Minus, Eye } from 'lucide-react';
+import { X, SlidersHorizontal, QrCode, Plus, Minus, Eye, ShoppingBag } from 'lucide-react';
 
 interface ManageOrderModalProps {
   isOpen: boolean;
@@ -13,7 +13,9 @@ interface ManageOrderModalProps {
 
 const ManageOrderModal: React.FC<ManageOrderModalProps> = ({ isOpen, onClose, order, onShowQRs, onViewGlobalQR }) => {
   const { claimItems, storeActiveQRs, activeQRs } = useOrders();
-  const [itemsToClaim, setItemsToClaim] = useState<{ [drinkId: number]: number }>({});
+  // Estado para controlar cuántos items se van a canjear de cada tipo. 
+  // Clave: índice del array de items (string), Valor: cantidad a canjear.
+  const [itemsToClaim, setItemsToClaim] = useState<{ [index: string]: number }>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -23,43 +25,52 @@ const ManageOrderModal: React.FC<ManageOrderModalProps> = ({ isOpen, onClose, or
 
   if (!isOpen || !order) return null;
 
-  const handleClaimQuantityChange = (drinkId: number, quantity: number, maxQuantity: number) => {
+  const handleClaimQuantityChange = (index: number, quantity: number, maxQuantity: number) => {
     const newQuantity = Math.max(0, Math.min(quantity, maxQuantity));
-    setItemsToClaim(prev => ({ ...prev, [drinkId]: newQuantity }));
+    setItemsToClaim(prev => ({ ...prev, [index]: newQuantity }));
   };
 
   const handleGenerateQRs = () => {
     const itemsToClaimArray = Object.entries(itemsToClaim)
       .filter(([, quantity]) => quantity > 0)
-      .map(([drinkId, quantity]) => ({ drinkId: Number(drinkId), quantity }));
+      .map(([indexStr, quantity]) => {
+        const index = parseInt(indexStr);
+        const item = order.items[index];
+        return { index, item, quantity };
+      });
 
     if (itemsToClaimArray.length === 0) return;
 
     const qrDataList: any[] = [];
-    itemsToClaimArray.forEach(({ drinkId, quantity }) => {
-      const drinkInfo = order.items.find(i => i.drink.id === drinkId)?.drink;
-      if (!drinkInfo) return;
+    
+    // Preparamos datos para actualización del contexto
+    const claimUpdateData: { variationId: number, quantity: number }[] = [];
+
+    itemsToClaimArray.forEach(({ index, item, quantity }) => {
+      claimUpdateData.push({ variationId: item.variationId, quantity });
 
       for (let i = 0; i < quantity; i++) {
         qrDataList.push({
           type: 'INDIVIDUAL',
-          orderNumber: `${order.orderId}-D${drinkId}-N${(order.items.find(i => i.drink.id === drinkId)?.claimed || 0) + i + 1}`,
+          // Usamos el índice como pseudo-ID para diferenciar visualmente los QRs
+          orderNumber: `${order.orderId}-I${index}-N${(item.claimed || 0) + i + 1}`,
           eventName: order.event.name,
-          drinks: [`1x ${drinkInfo.name}`],
-          total: drinkInfo.price,
+          drinks: [`1x ${item.productName} (${item.variationName})`],
+          total: item.price,
         });
       }
     });
 
-    claimItems(order.orderId, itemsToClaimArray);
+    claimItems(order.orderId, claimUpdateData); 
     storeActiveQRs(order.orderId, qrDataList);
     onShowQRs(qrDataList);
   };
 
-  const handleViewActiveQRs = (drinkId: number) => {
+  const handleViewActiveQRs = (index: number) => {
     const activeQRsForOrder = activeQRs[order.orderId] || [];
+    // Filtramos QRs generados para este índice de item
     const activeQRsForItem = activeQRsForOrder.filter(qr => 
-        qr.orderNumber.startsWith(`${order.orderId}-D${drinkId}-`)
+        qr.orderNumber.startsWith(`${order.orderId}-I${index}-`)
     );
     if (activeQRsForItem.length > 0) {
         onShowQRs(activeQRsForItem);
@@ -88,35 +99,40 @@ const ManageOrderModal: React.FC<ManageOrderModalProps> = ({ isOpen, onClose, or
 
         {/* Content */}
         <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
-          {order.items.map(item => {
+          {order.items.map((item, index) => {
             const claimed = item.claimed || 0;
             const remaining = item.quantity - claimed;
-            const currentClaimAmount = itemsToClaim[item.drink.id] || 0;
-            const activeQRsForItemCount = (activeQRs[order.orderId] || []).filter(qr => qr.orderNumber.startsWith(`${order.orderId}-D${item.drink.id}-`)).length;
+            const currentClaimAmount = itemsToClaim[index] || 0;
+            // Verificamos si hay QRs activos para este índice
+            const activeQRsForItemCount = (activeQRs[order.orderId] || []).filter(qr => qr.orderNumber.startsWith(`${order.orderId}-I${index}-`)).length;
 
             return (
-              <div key={item.drink.id} className="bg-gray-50 rounded-xl p-4">
+              <div key={index} className="bg-gray-50 rounded-xl p-4">
                  <div className="flex items-center space-x-4">
-                    <img 
-                        src={item.drink.image} 
-                        alt={item.drink.name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                      />
-                    <div className="flex-1">
-                        <h4 className="font-bold text-gray-900">{item.drink.name}</h4>
+                    {/* Icono Placeholder o Genérico */}
+                    <div className="h-12 w-12 bg-white rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                        <ShoppingBag className="w-6 h-6 text-purple-500" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-gray-900 truncate">{item.productName}</h4>
+                        <p className="text-xs text-gray-500 mb-1">{item.variationName}</p>
                         <p className="text-sm text-gray-500">
-                            Comprados: {item.quantity} | Reclamados: {claimed} | <span className="font-medium text-blue-600">Restantes: {remaining}</span>
+                            Comprados: {item.quantity} | <span className="text-green-600">Reclamados: {claimed}</span>
                         </p>
+                        <p className="text-sm font-medium text-blue-600">Disponibles: {remaining}</p>
+                        
                         {activeQRsForItemCount > 0 && (
-                            <button onClick={() => handleViewActiveQRs(item.drink.id)} className="text-xs text-orange-500 hover:underline mt-1 flex items-center gap-1">
+                            <button onClick={() => handleViewActiveQRs(index)} className="text-xs text-orange-500 hover:underline mt-2 flex items-center gap-1">
                                 <Eye className="w-4 h-4"/> Ver {activeQRsForItemCount} QR(s) activo(s)
                             </button>
                         )}
                     </div>
+
                      {remaining > 0 && (
                         <div className="flex items-center space-x-2">
                             <button
-                                onClick={() => handleClaimQuantityChange(item.drink.id, currentClaimAmount - 1, remaining)}
+                                onClick={() => handleClaimQuantityChange(index, currentClaimAmount - 1, remaining)}
                                 className="w-8 h-8 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full flex items-center justify-center transition-colors disabled:opacity-50"
                                 disabled={currentClaimAmount <= 0}
                                 >
@@ -126,7 +142,7 @@ const ManageOrderModal: React.FC<ManageOrderModalProps> = ({ isOpen, onClose, or
                                 {currentClaimAmount}
                             </span>
                             <button
-                                onClick={() => handleClaimQuantityChange(item.drink.id, currentClaimAmount + 1, remaining)}
+                                onClick={() => handleClaimQuantityChange(index, currentClaimAmount + 1, remaining)}
                                 className="w-8 h-8 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full flex items-center justify-center transition-colors disabled:opacity-50"
                                 disabled={currentClaimAmount >= remaining}
                                 >

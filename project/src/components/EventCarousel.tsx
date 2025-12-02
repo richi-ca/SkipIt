@@ -12,38 +12,6 @@ interface EventCarouselProps {
   onSelectEvent: (event: Event) => void;
 }
 
-const monthMap: { [key: string]: number } = {
-  'Enero': 0,
-  'Febrero': 1,
-  'Marzo': 2,
-  'Abril': 3,
-  'Mayo': 4,
-  'Junio': 5,
-  'Julio': 6,
-  'Agosto': 7,
-  'Septiembre': 8,
-  'Octubre': 9,
-  'Noviembre': 10,
-  'Diciembre': 11,
-};
-
-const parseDate = (dateString: string): Date => {
-  const parts = dateString.split(' ');
-  if (parts.length !== 3) {
-    return new Date(0); // Return an invalid date
-  }
-  const day = parseInt(parts[0]);
-  const monthName = parts[1];
-  const year = parseInt(parts[2]);
-  const month = monthMap[monthName];
-
-  if (isNaN(day) || month === undefined || isNaN(year)) {
-    return new Date(0); // Return an invalid date
-  }
-
-  return new Date(year, month, day);
-};
-
 const NextArrow = (props: any) => {
   const { onClick } = props;
   return (
@@ -71,20 +39,28 @@ const PrevArrow = (props: any) => {
 const EventCarousel: React.FC<EventCarouselProps> = ({ events, onSelectEvent }) => {
   const screenWidth = useScreenWidth();
 
-  const upcomingEvents = events
-    .map(event => ({
-      ...event,
-      dateObj: parseDate(event.date),
-    }))
-    .filter(event => event.dateObj >= new Date())
-    .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
-    .slice(0, 5);
+  // Lógica de Filtrado Robusta (Usando ISO Date):
+  // 1. Debe estar marcado como 'isFeatured'.
+  // 2. No debe ser un evento pasado (comparación de strings ISO funciona perfectamente: '2025-12-15' >= '2025-11-26').
+  // 3. Ordenar por 'carouselOrder'.
+  
+  const todayISO = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+  const featuredEvents = events
+    .filter(event => {
+      // Si no tiene isoDate, asumimos que es válido para no ocultarlo por error, o lo ocultamos (decisión de negocio).
+      // Aquí asumimos que si falta isoDate, se muestra si es featured.
+      if (!event.isoDate) return event.isFeatured;
+      
+      return event.isFeatured && event.isoDate >= todayISO;
+    })
+    .sort((a, b) => (a.carouselOrder || 99) - (b.carouselOrder || 99));
 
   const slidesToShow = screenWidth < 1024 ? 1 : 2;
 
   const settings = {
     dots: true,
-    infinite: upcomingEvents.length > slidesToShow,
+    infinite: featuredEvents.length > slidesToShow,
     speed: 500,
     slidesToShow: slidesToShow,
     slidesToScroll: 1,
@@ -94,15 +70,15 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events, onSelectEvent }) 
     prevArrow: <PrevArrow />,
   };
 
-  if (upcomingEvents.length === 0) {
-    return <p>No hay eventos próximos.</p>;
+  if (featuredEvents.length === 0) {
+    return <p className="text-center text-white">No hay eventos destacados próximos.</p>;
   }
 
   return (
-    <div className="w-full relative">
+    <div className="w-full relative pb-8"> {/* Added pb-8 for dots space */}
       <Slider {...settings}>
-        {upcomingEvents.map(event => (
-          <div key={event.id} className="p-4">
+        {featuredEvents.map(event => (
+          <div key={event.id} className="p-4 h-full">
             <EventCard event={event} onSelect={onSelectEvent} />
           </div>
         ))}

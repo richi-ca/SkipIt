@@ -1,15 +1,15 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { Order } from '../data/mockData';
+// import { Order } from '../data/mockData'; // Deshabilitado temporalmente hasta resolver lógica de re-order
 
 // Define the shape of the context
 interface CartContextType {
-  cartItems: { [key: number]: number };
-  addToCart: (drinkId: number) => void;
-  removeFromCart: (drinkId: number) => void;
-  deleteProductFromCart: (drinkId: number) => void;
+  cartItems: { [key: number]: number }; // key: variationId, value: quantity
+  addToCart: (variationId: number) => void;
+  removeFromCart: (variationId: number) => void;
+  deleteProductFromCart: (variationId: number) => void;
   clearCart: () => void;
   getTotalItems: () => number;
-  repeatOrder: (orderItems: Order['items']) => void; // Nueva función
+  // repeatOrder: (orderItems: Order['items']) => void; // Deshabilitado temporalmente
 }
 
 // Create the context
@@ -19,26 +19,26 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<{ [key: number]: number }>({});
 
-  const addToCart = (drinkId: number) => {
-    setCartItems(prev => ({ ...prev, [drinkId]: (prev[drinkId] || 0) + 1 }));
+  const addToCart = (variationId: number) => {
+    setCartItems(prev => ({ ...prev, [variationId]: (prev[variationId] || 0) + 1 }));
   };
 
-  const removeFromCart = (drinkId: number) => {
+  const removeFromCart = (variationId: number) => {
     setCartItems(prev => {
       const newItems = { ...prev };
-      if (newItems[drinkId] > 1) {
-        newItems[drinkId]--;
+      if (newItems[variationId] > 1) {
+        newItems[variationId]--;
       } else {
-        delete newItems[drinkId];
+        delete newItems[variationId];
       }
       return newItems;
     });
   };
 
-  const deleteProductFromCart = (drinkId: number) => {
+  const deleteProductFromCart = (variationId: number) => {
     setCartItems(prev => {
       const newItems = { ...prev };
-      delete newItems[drinkId];
+      delete newItems[variationId];
       return newItems;
     });
   };
@@ -51,21 +51,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return Object.values(cartItems).reduce((sum, count) => sum + count, 0);
   };
 
-  // Nueva función para repetir un pedido
+  /* 
+  // TODO: Implementar lógica de repetir orden conectada al Backend.
+  // Requiere validar que las variaciones (IDs) aún existan y tengan stock.
   const repeatOrder = (orderItems: Order['items']) => {
-    setCartItems(prev => {
-      const newItems = { ...prev };
-      orderItems.forEach(item => {
-        const drinkId = item.drink.id;
-        const quantity = item.quantity;
-        newItems[drinkId] = (newItems[drinkId] || 0) + quantity;
-      });
-      return newItems;
-    });
-  };
+    // Lógica pendiente
+  }; 
+  */
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, deleteProductFromCart, clearCart, getTotalItems, repeatOrder }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, deleteProductFromCart, clearCart, getTotalItems }}>
       {children}
     </CartContext.Provider>
   );

@@ -1,4 +1,87 @@
-import { Clock, Gift, Users } from 'lucide-react';
+// --- Interfaces de Site Content (Configuración) ---
+export interface SiteContent {
+  hero: {
+    title: string;
+    subtitle: string;
+    description: string;
+    ctaButtonText: string;
+    secondaryButtonText: string;
+    contestButtonText: string;
+    features: {
+      icon: 'Clock' | 'Zap' | 'Users';
+      title: string;
+      description: string;
+    }[];
+  };
+  about: {
+    mission: {
+      text: string;
+      highlight: string;
+    };
+    vision: {
+      text: string;
+    };
+    steps: {
+      stepNumber: number;
+      title: string;
+      description: string;
+    }[];
+  };
+}
+
+export const siteContent: SiteContent = {
+  hero: {
+    title: "¡Sáltate la fila,",
+    subtitle: "y dedícate a disfrutar!",
+    description: "Precompra tus tragos favoritos y canjéalos al instante con tu código QR.\nPara nosotros tu tiempo es oro…¡Gástalo bailando con SkipIT!",
+    ctaButtonText: "Buscar Eventos",
+    secondaryButtonText: "Ver Promociones",
+    contestButtonText: "Ver Concursos",
+    features: [
+      {
+        icon: 'Clock',
+        title: 'Ahorra Tiempo',
+        description: 'No más espera en la caja.\nCanjea tu trago directo en la barra.'
+      },
+      {
+        icon: 'Zap',
+        title: 'Súper Fácil',
+        description: 'Compra, recibe tu QR y canjea. ¡Así de simple!'
+      },
+      {
+        icon: 'Users',
+        title: 'Más Diversión',
+        description: 'Dedica tu tiempo a lo que realmente importa: ¡pasarlo bien!'
+      }
+    ]
+  },
+  about: {
+    mission: {
+      text: "Transformar la experiencia de los eventos masivos, eliminando las largas filas en las cajas y barras mediante tecnología simple y eficiente.",
+      highlight: "cajas y barras" 
+    },
+    vision: {
+      text: "Ser la plataforma estándar para la compra de bebestibles en eventos de todo Chile, reconocida por su rapidez y confiabilidad."
+    },
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Precompra",
+        description: "Elige tu evento y tus tragos favoritos desde tu celular."
+      },
+      {
+        stepNumber: 2,
+        title: "Recibe tu QR",
+        description: "Obtén un código único por cada compra realizada."
+      },
+      {
+        stepNumber: 3,
+        title: "Canjea",
+        description: "Muestra tu QR en la barra y recibe tu pedido al instante."
+      }
+    ]
+  }
+};
 
 // --- Interfaces de Usuario ---
 export interface User {
@@ -9,6 +92,7 @@ export interface User {
   dob?: string; // Date of Birth
   gender?: 'M' | 'F' | 'Otro';
   phone?: string;
+  role?: 'admin' | 'user-cli' | 'scanner'; // Nuevo campo de rol
 }
 
 // --- Interfaces de Menú y Productos (Jerárquico) ---
@@ -44,11 +128,12 @@ export interface Event {
   id: number;
   name: string;
   overlayTitle?: string;    // Título artístico sobre la imagen
-  date: string;
-  time: string;
+  isoDate: string;          // Fecha ISO para lógica (YYYY-MM-DD)
+  startTime: string;        // Hora inicio (HH:mm)
+  endTime: string;          // Hora fin (HH:mm)
   location: string;
   image: string;
-  price: string;
+  price: number;            // Precio numérico
   rating: number;
   type: string;
   
@@ -76,7 +161,7 @@ export interface Promotion {
   // Logic
   active: boolean;
   actionType?: ActionType;  // Qué hace el botón "Activar"
-  linkedProductId?: number; // Si es ADD_TO_CART, qué producto agrega
+  linkedVariationId?: number; // Si es ADD_TO_CART, qué variación agrega (ID específico)
 }
 
 export interface Contest {
@@ -94,15 +179,17 @@ export interface Contest {
   active: boolean;
   actionType: ActionType;   // Qué hace el botón "Participar"
   actionUrl?: string;       // Si es LINK, a dónde va
-  linkedProductId?: number; // Si es ADD_TO_CART (Compra y participa)
+  linkedVariationId?: number; // Si es ADD_TO_CART (Compra y participa)
 }
 
 export interface Order {
   orderId: string;
   userId: string;
-  date: string;
+  isoDate: string; // Renombrado de date a isoDate
+  purchaseTime?: string; // Hora de compra (HH:mm:ss)
   event: Event;
   items: {
+    variationId: number;    // ID único para tracking preciso
     productName: string;    // Snapshot del nombre
     variationName: string;  // Snapshot de la variación
     quantity: number;
@@ -122,26 +209,60 @@ export const users: User[] = [
     id: "1",
     name: "Juan Perez",
     email: "juan.perez@example.com",
-    hasPriorityAccess: true,
+    hasPriorityAccess: false,
+    role: 'user-cli',
   },
   {
     id: "2",
     name: "Ana Garcia",
     email: "ana.garcia@example.com",
     hasPriorityAccess: false,
+    role: 'user-cli',
   },
   {
     id: "3",
     name: "Carlos Sanchez",
     email: "carlos.sanchez@example.com",
     hasPriorityAccess: false,
+    role: 'user-cli',
   },
   {
     id: "1759105113010",
     name: "Ricardo Castillo Avalos",
     email: "ricardo@correo.com",
     hasPriorityAccess: true,
+    role: 'user-cli',
   },
+  // --- Nuevos Usuarios Admin ---
+  {
+    id: "admin-1",
+    name: "Ricardo Admin",
+    email: "ricardo@admin.cl",
+    hasPriorityAccess: true,
+    role: 'admin',
+  },
+  {
+    id: "admin-2",
+    name: "Cristian Gomez",
+    email: "cri.gomezv@profesor.duoc.cl",
+    hasPriorityAccess: true,
+    role: 'admin',
+  },
+  {
+    id: "admin-3",
+    name: "Andres Gomez",
+    email: "andres.gomez.vega@gmail.com",
+    hasPriorityAccess: true,
+    role: 'admin',
+  },
+  // --- Usuario Scanner ---
+  {
+    id: "scanner-1",
+    name: "Scanner Staff",
+    email: "scanner@skipit.cl",
+    hasPriorityAccess: false,
+    role: 'scanner',
+  }
 ];
 
 // --- Menú General (Base para todos los eventos por ahora) ---
@@ -269,11 +390,12 @@ export const events: Event[] = [
     id: 1,
     name: "Ultra Music Festival",
     overlayTitle: "Ultra Music Festival",
-    date: "15 Diciembre 2025",
-    time: "20:00 - 06:00",
+    isoDate: "2025-12-15",
+    startTime: "20:00",
+    endTime: "06:00",
     location: "Parque O'Higgins, Santiago",
     image: "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg",
-    price: "$15.000",
+    price: 15000,
     rating: 4.8,
     type: "Festival",
     isFeatured: true,
@@ -284,11 +406,12 @@ export const events: Event[] = [
     id: 2,
     name: "Noche de Reggaeton",
     overlayTitle: "Noche de Reggaeton",
-    date: "18 Diciembre 2025",
-    time: "22:00 - 04:00",
+    isoDate: "2025-12-18",
+    startTime: "22:00",
+    endTime: "04:00",
     location: "Club The One, Las Condes",
     image: "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg",
-    price: "$8.000",
+    price: 8000,
     rating: 4.6,
     type: "Club",
     isFeatured: true,
@@ -299,11 +422,12 @@ export const events: Event[] = [
     id: 3,
     name: "Rock en Español",
     overlayTitle: "Rock en Español",
-    date: "22 Diciembre 2025",
-    time: "19:00 - 02:00",
+    isoDate: "2025-12-22",
+    startTime: "19:00",
+    endTime: "02:00",
     location: "Teatro Cariola, Santiago",
     image: "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg",
-    price: "$12.000",
+    price: 12000,
     rating: 4.9,
     type: "Concierto",
     isFeatured: true,
@@ -314,11 +438,12 @@ export const events: Event[] = [
     id: 4,
     name: "Summer Beach Party",
     overlayTitle: "Summer Beach Party",
-    date: "25 Diciembre 2025",
-    time: "16:00 - 01:00",
+    isoDate: "2025-12-25",
+    startTime: "16:00",
+    endTime: "01:00",
     location: "Playa Reñaca, Viña del Mar",
     image: "https://images.pexels.com/photos/1587927/pexels-photo-1587927.jpeg",
-    price: "$10.000",
+    price: 10000,
     rating: 4.7,
     type: "Playa",
     isFeatured: true,
@@ -337,7 +462,7 @@ export const promotions: Promotion[] = [
     iconName: 'Clock',
     active: true,
     actionType: 'ADD_TO_CART', // Ejemplo: Debería añadir una cerveza
-    linkedProductId: 101 // Variación 330ml Corona
+    linkedVariationId: 101 // Variación 330ml Corona
   },
   {
     id: 2,
@@ -371,7 +496,7 @@ export const contests: Contest[] = [
     endDate: "31 Dic",
     active: true,
     actionType: 'ADD_TO_CART', // "Compra trago y participa"
-    linkedProductId: 101
+    linkedVariationId: 101
   },
   {
     id: 2,
@@ -382,7 +507,7 @@ export const contests: Contest[] = [
     endDate: "15 Ene",
     active: true,
     actionType: 'ADD_TO_CART',
-    linkedProductId: 104
+    linkedVariationId: 104
   }
 ];
 
@@ -390,11 +515,12 @@ export const orders: Order[] = [
   {
     orderId: 'ORD-001',
     userId: "1",
-    date: '2025-01-15',
+    isoDate: '2025-11-15', // Ajustado: Compra 1 mes antes del evento
+    purchaseTime: '14:32:10', // Hora aleatoria
     event: events[0],
     items: [
-      { productName: "Pisco Sour", variationName: "Tradicional", quantity: 2, claimed: 0, price: 7000 },
-      { productName: "Corona Extra", variationName: "330ml", quantity: 1, claimed: 0, price: 4500 },
+      { variationId: 104, productName: "Pisco Sour", variationName: "Tradicional", quantity: 2, claimed: 0, price: 7000 },
+      { variationId: 101, productName: "Corona Extra", variationName: "330ml", quantity: 1, claimed: 0, price: 4500 },
     ],
     total: 18500,
     status: 'COMPLETED',
@@ -402,24 +528,57 @@ export const orders: Order[] = [
   {
     orderId: 'ORD-002',
     userId: "1",
-    date: '2025-01-18',
+    isoDate: '2025-11-20', // Ajustado
+    purchaseTime: '19:45:55', // Hora aleatoria
     event: events[1],
     items: [
-      { productName: "Mojito", variationName: "Tradicional", quantity: 1, claimed: 1, price: 6500 },
-      { productName: "Caipirinha", variationName: "Tradicional", quantity: 1, claimed: 0, price: 6000 },
+      { variationId: 105, productName: "Mojito", variationName: "Tradicional", quantity: 1, claimed: 1, price: 6500 },
+      { variationId: 106, productName: "Caipirinha", variationName: "Tradicional", quantity: 1, claimed: 0, price: 6000 },
     ],
     total: 12500,
     status: 'PARTIALLY_CLAIMED',
   },
   {
     orderId: 'ORD-003',
-    userId: "2",
-    date: '2025-01-22',
+    userId: "1",
+    isoDate: '2025-12-05', // Ajustado
+    purchaseTime: '10:15:30', // Hora aleatoria
     event: events[2],
     items: [
-      { productName: "Jägermeister", variationName: "Shot", quantity: 3, claimed: 3, price: 4000 },
+      { variationId: 109, productName: "Jägermeister", variationName: "Shot", quantity: 3, claimed: 3, price: 4000 },
+    ],
+    total: 12000,
+    status: 'FULLY_CLAIMED',
+  },
+  {
+    orderId: 'ORD-004',
+    userId: "1",
+    isoDate: '2025-12-05', // Ajustado
+    purchaseTime: '10:39:33', // Hora aleatoria
+    event: events[3],
+    items: [
+      { variationId: 109, productName: "Jägermeister", variationName: "Shot", quantity: 3, claimed: 3, price: 4000 },
     ],
     total: 12000,
     status: 'FULLY_CLAIMED',
   },
 ];
+
+// --- Helpers de Búsqueda (Simulando Backend) ---
+
+export const findProductByVariationId = (variationId: number) => {
+  for (const menu of menus) {
+    for (const category of menu.categories) {
+      for (const product of category.products) {
+        const variation = product.variations.find(v => v.id === Number(variationId));
+        if (variation) {
+          return {
+            product,
+            variation
+          };
+        }
+      }
+    }
+  }
+  return null;
+};

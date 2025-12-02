@@ -213,6 +213,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                 render={({ field, fieldState: { error } }) => (
                   <PhoneInput
                     {...field}
+                    id="phone"
                     international
                     defaultCountry="CL"
                     countryCallingCodeEditable={false}
@@ -244,6 +245,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                       onChange={(newValue) => field.onChange(newValue)}
                       slotProps={{
                         textField: {
+                          id: 'dob',
                           fullWidth: true,
                           error: !!error,
                           helperText: error?.message,
@@ -266,6 +268,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                   rules={{ required: 'El sexo es obligatorio.' }}
                   render={({ field }) => (
                     <CustomDropdown
+                      id="gender"
                       value={field.value}
                       onChange={field.onChange}
                       options={genderOptions}

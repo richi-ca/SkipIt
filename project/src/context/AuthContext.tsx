@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User } from '../data/mockData'; // Import the unified User type
 
 // Define the shape of the context
@@ -8,6 +8,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (userData: User) => void;
   logout: () => void;
+  actionAfterLogin: (() => void) | null;
+  setActionAfterLogin: (action: (() => void) | null) => void;
 }
 
 // Create the context with a default value
@@ -16,6 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Create a provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [actionAfterLogin, setActionAfterLogin] = useState<(() => void) | null>(null);
 
   const login = (userData: User) => {
     setUser(userData);
@@ -29,8 +32,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isAuthenticated = !!user;
 
+  // Effect to run action after login
+  useEffect(() => {
+    if (isAuthenticated && actionAfterLogin) {
+      actionAfterLogin();
+      setActionAfterLogin(null); // Reset after execution
+    }
+  }, [isAuthenticated, actionAfterLogin]);
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, actionAfterLogin, setActionAfterLogin }}>
       {children}
     </AuthContext.Provider>
   );

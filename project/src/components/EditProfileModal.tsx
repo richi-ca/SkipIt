@@ -10,8 +10,9 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ isOpen, onClose, onSave }: EditProfileModalProps) {
-  if (!isOpen) return null;
   const [saving, setSaving] = useState(false);
+
+  if (!isOpen) return null;
 
   const handleSave = async (formData: { name?: string; email?: string; phone?: string }) => {
     setSaving(true);

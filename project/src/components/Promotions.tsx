@@ -1,52 +1,36 @@
 import React from 'react';
 import { Gift, Clock, Users, Trophy } from 'lucide-react';
+import { promotions, contests, PromotionStyle } from '../data/mockData';
+import { useCart } from '../context/CartContext';
+import toast from 'react-hot-toast';
+
+// Mapeo de estilos para mantener el diseño original basado en la data
+const gradientMap: Record<PromotionStyle, string> = {
+  'orange-red': 'from-orange-500 to-red-500',
+  'blue-purple': 'from-blue-500 to-purple-500',
+  'green-emerald': 'from-green-500 to-emerald-500',
+};
+
+const iconMap = {
+  'Clock': Clock,
+  'Users': Users,
+  'Gift': Gift,
+};
 
 export default function Promotions() {
-  const promotions = [
-    {
-      id: 1,
-      title: "Happy Hour Digital",
-      description: "2x1 en cervezas precompradas hasta las 11 PM",
-      icon: Clock,
-      color: "from-orange-500 to-red-500",
-      discount: "50% OFF"
-    },
-    {
-      id: 2,
-      title: "Grupo Premiado",
-      description: "Compra para 4+ personas y obtén tragos gratis",
-      icon: Users,
-      color: "from-blue-500 to-purple-500",
-      discount: "GRATIS"
-    },
-    {
-      id: 3,
-      title: "Weekend Vibes",
-      description: "Descuentos especiales en fines de semana",
-      icon: Gift,
-      color: "from-green-500 to-emerald-500",
-      discount: "30% OFF"
-    }
-  ];
+  const { addToCart } = useCart();
 
-  const contests = [
-    {
-      id: 1,
-      title: "Corona Extra Challenge",
-      description: "Compra 3 cervezas Corona y participa por entradas VIP",
-      brand: "Corona",
-      prize: "Entradas VIP",
-      endDate: "31 Dic"
-    },
-    {
-      id: 2,
-      title: "Pisco Sour Festival",
-      description: "Gana un viaje a Perú comprando Pisco Sour",
-      brand: "Capel",
-      prize: "Viaje a Perú",
-      endDate: "15 Ene"
+  const handleAction = (type: 'PROMO' | 'CONTEST', item: any) => {
+    if (item.actionType === 'ADD_TO_CART' && item.linkedVariationId) {
+      addToCart(item.linkedVariationId);
+      toast.success(`${type === 'PROMO' ? 'Promoción' : 'Concurso'} activado! Producto agregado al carrito.`);
+    } else if (item.actionType === 'LINK' && item.actionUrl) {
+      window.open(item.actionUrl, '_blank');
+    } else {
+      // Default fallback or 'NONE'
+      console.log('Action triggered:', type, item.id);
     }
-  ];
+  };
 
   return (
     <section id="promociones" className="py-16 bg-gray-50">
@@ -62,22 +46,27 @@ export default function Promotions() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {promotions.map((promo) => {
-            const IconComponent = promo.icon;
+          {promotions.filter(p => p.active).map((promo) => {
+            const IconComponent = iconMap[promo.iconName] || Gift;
+            const gradientClass = gradientMap[promo.styleVariant] || 'from-purple-500 to-pink-500';
+
             return (
               <div key={promo.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                <div className={`bg-gradient-to-r ${promo.color} p-6 text-white`}>
+                <div className={`bg-gradient-to-r ${gradientClass} p-6 text-white`}>
                   <div className="flex items-center justify-between mb-4">
                     <IconComponent className="w-8 h-8" />
                     <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-bold">
-                      {promo.discount}
+                      {promo.discountText}
                     </span>
                   </div>
                   <h3 className="text-xl font-bold">{promo.title}</h3>
                 </div>
                 <div className="p-6">
                   <p className="text-gray-600 mb-4">{promo.description}</p>
-                  <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105">
+                  <button 
+                    onClick={() => handleAction('PROMO', promo)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105"
+                  >
                     Activar Promoción
                   </button>
                 </div>
@@ -97,8 +86,10 @@ export default function Promotions() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8" id="concursos">
-          {contests.map((contest) => (
+          {contests.filter(c => c.active).map((contest) => (
             <div key={contest.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              {/* Nota: Los concursos en el diseño original usaban yellow-orange fijo, pero podríamos parametrizarlo igual si quisiéramos.
+                  Por ahora mantenemos el diseño original fijo para concursos salvo que la data diga otra cosa en el futuro. */}
               <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <Trophy className="w-8 h-8" />
@@ -110,17 +101,28 @@ export default function Promotions() {
               </div>
               <div className="p-6">
                 <p className="text-gray-600 mb-4">{contest.description}</p>
+                
+                {/* Renderizado condicional de imagen si existe (Feature PDF) */}
+                {contest.image && (
+                   <div className="mb-4 flex justify-center">
+                     <img src={contest.image} alt={contest.title} className="h-32 object-contain" />
+                   </div>
+                )}
+
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-sm text-gray-500">Premio</p>
-                    <p className="font-bold text-purple-600">{contest.prize}</p>
+                    <p className="font-bold text-purple-600">{contest.prizeText}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-500">Termina</p>
                     <p className="font-bold text-red-600">{contest.endDate}</p>
                   </div>
                 </div>
-                <button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105">
+                <button 
+                  onClick={() => handleAction('CONTEST', contest)}
+                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105"
+                >
                   Participar Ahora
                 </button>
               </div>

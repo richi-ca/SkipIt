@@ -13,6 +13,7 @@ const LoginPageHandler: React.FC<LoginPageHandlerProps> = ({ onOpenLogin }) => {
   useEffect(() => {
     if (!isAuthenticated) {
       onOpenLogin();
+      navigate('/', { replace: true });
     } else {
       // If already authenticated, redirect to profile or home
       navigate('/profile', { replace: true });

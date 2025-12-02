@@ -62,6 +62,7 @@ export default function ChangePasswordModal({ isOpen, onClose, onConfirm }: Chan
             <input
               type="password"
               id="oldPassword"
+              name="oldPassword"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm p-2"
@@ -74,6 +75,7 @@ export default function ChangePasswordModal({ isOpen, onClose, onConfirm }: Chan
             <input
               type="password"
               id="newPassword"
+              name="newPassword"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm p-2"
@@ -86,6 +88,7 @@ export default function ChangePasswordModal({ isOpen, onClose, onConfirm }: Chan
             <input
               type="password"
               id="confirmNewPassword"
+              name="confirmNewPassword"
               value={confirmNewPassword}
               onChange={(e) => setConfirmNewPassword(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm p-2"

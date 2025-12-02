@@ -11,9 +11,10 @@ interface CustomDropdownProps {
   options: CustomDropdownOption[];
   value: string;
   onChange: (value: string) => void;
+  id?: string;
 }
 
-const CustomDropdown = ({ options, value, onChange }: CustomDropdownProps) => {
+const CustomDropdown = ({ options, value, onChange, id }: CustomDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -41,6 +42,7 @@ const CustomDropdown = ({ options, value, onChange }: CustomDropdownProps) => {
     <div className="relative w-full" ref={dropdownRef}>
       {/* Botón principal que muestra la selección actual */}
       <button
+        id={id}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 text-left text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm hover:border-gray-400 transition-all duration-200 flex justify-between items-center"

@@ -1,20 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Header from './components/Header';
-import LoginModal from './components/LoginModal';
-import RegisterModal from './components/RegisterModal';
-import DrinkMenu from './components/DrinkMenu';
-import Cart from './components/Cart';
-import QRCode from './components/QRCode';
 import AgeVerification from './components/AgeVerification';
 import UnderageBlock from './components/UnderageBlock';
 import HomePage from './pages/HomePage';
 import EventsPage from './pages/EventsPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
-import ProfilePage from './pages/ProfilePage'; // New import
-import LoginPageHandler from './pages/LoginPageHandler'; // New import
-import { events, drinks, Event, User, Order } from './data/mockData';
+import ProfilePage from './pages/ProfilePage';
+import LoginPageHandler from './pages/LoginPageHandler';
+import { events, Event, Order, findProductByVariationId } from './data/mockData';
 import LoginPrompt from './components/LoginPrompt';
 import PaymentModal from './components/PaymentModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -23,11 +17,18 @@ import { OrderProvider, useOrders } from './context/OrderContext';
 import OrderTypeSelectionModal from './components/OrderTypeSelectionModal';
 import ManageOrderModal from './components/ManageOrderModal';
 import MultiQRCodeModal from './components/MultiQRCodeModal';
-import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
+import ConfirmationModal from './components/ConfirmationModal';
+import QRCode from './components/QRCode';
+import DrinkMenu from './components/DrinkMenu';
+
+// Layouts
+import PublicLayout from './layouts/PublicLayout';
+import AdminLayout from './layouts/AdminLayout';
+import AdminRoute from './components/AdminRoute';
 
 function App() {
   return (
@@ -47,57 +48,53 @@ function App() {
 }
 
 function AppContent() {
+  // Context Hooks
   const { cartItems, clearCart } = useCart();
-  const { user, login, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, setActionAfterLogin } = useAuth();
   const { addOrder, claimFullOrder, storeActiveQRs } = useOrders();
 
+  // --- Global State (Age Verification) ---
   const [isAgeVerified, setIsAgeVerified] = useState(false);
   const [showUnderageBlock, setShowUnderageBlock] = useState(false);
+  
+  // Estados de Modales Globales (Restaurados para control desde App)
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
+  // --- Event & Cart Logic (Shared between layouts potentially, but mostly Public) ---
+  // Nota: Idealmente esto debería moverse a un EventContext o similar para limpiar App.tsx,
+  // pero por ahora lo mantenemos aquí para no romper la lógica de "DrinkMenu" que se abre sobre todo.
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null); 
+  const [cartEvent, setCartEvent] = useState<Event | null>(null);         
+  const [pendingEventSelection, setPendingEventSelection] = useState<Event | null>(null);
+  const [isCartConflictModalOpen, setIsCartConflictModalOpen] = useState(false);
+
+  // Estado para controlar la visibilidad del carrito (Restaurado)
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isQROpen, setIsQROpen] = useState(false);
-  const [orderData, setOrderData] = useState<any>(null);
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const [actionAfterLogin, setActionAfterLogin] = useState<(() => void) | null>(null);
-  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+
+  // --- Payment & Order Logic ---
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState(0);
-  const lastScrollY = useRef(0);
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
 
-  // State for new modals
+  // --- QR & Order Management Modals ---
+  const [isQROpen, setIsQROpen] = useState(false);
+  const [orderData, setOrderData] = useState<any>(null);
   const [isOrderTypeModalOpen, setIsOrderTypeModalOpen] = useState(false);
   const [isManageOrderModalOpen, setIsManageOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isMultiQrModalOpen, setIsMultiQrModalOpen] = useState(false);
   const [multiQrData, setMultiQrData] = useState<any[]>([]);
 
+  // --- Age Verification Logic ---
   const handleAgeConfirm = () => {
-    const verificationData = {
-      verified: true,
-      timestamp: new Date().getTime(),
-    };
+    const verificationData = { verified: true, timestamp: new Date().getTime() };
     localStorage.setItem('ageVerified', JSON.stringify(verificationData));
     setIsAgeVerified(true);
   };
 
-  const handleAgeDeny = () => {
-    setShowUnderageBlock(true);
-  };
-
-  const handleGoBack = () => {
-    setShowUnderageBlock(false);
-  };
-
-  const handleLoginSuccess = (loggedInUser: User) => {
-    login(loggedInUser);
-    setIsLoginOpen(false);
-    if (actionAfterLogin) {
-      actionAfterLogin();
-      setActionAfterLogin(null);
-    }
-  };
+  const handleAgeDeny = () => { setShowUnderageBlock(true); };
+  const handleGoBack = () => { setShowUnderageBlock(false); };
 
   useEffect(() => {
     const verificationDataString = localStorage.getItem('ageVerified');
@@ -105,73 +102,94 @@ function AppContent() {
       try {
         const verificationData = JSON.parse(verificationDataString);
         const now = new Date().getTime();
-        const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000; // 7 días
-
+        const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000;
         if (verificationData.verified && (now - verificationData.timestamp < sevenDaysInMillis)) {
           setIsAgeVerified(true);
         } else {
-          // Si ha expirado, se elimina el item para la siguiente comprobación.
           localStorage.removeItem('ageVerified');
         }
       } catch (error) {
-        // Si hay un error en los datos guardados, se limpian.
         localStorage.removeItem('ageVerified');
       }
     }
   }, []);
 
-  useEffect(() => {
-    const controlHeader = () => {
-      if (window.scrollY > lastScrollY.current && window.scrollY > 100) {
-        setIsHeaderVisible(false);
-      } else {
-        setIsHeaderVisible(true);
-      }
-      lastScrollY.current = window.scrollY;
-    };
-
-    window.addEventListener('scroll', controlHeader);
-    return () => {
-      window.removeEventListener('scroll', controlHeader);
-    };
-  }, []);
-
-  const openPaymentModal = () => {
-    const total = drinks
-      .filter(drink => cartItems[drink.id] > 0)
-      .reduce((sum, drink) => sum + (drink.price * cartItems[drink.id]), 0);
-    setPaymentAmount(total);
-    setIsCartOpen(false);
-    setIsPaymentModalOpen(true);
-  }
-
-  const handleCheckout = () => {
-    if (!isAuthenticated || !user) {
-      setActionAfterLogin(() => openPaymentModal);
-      setIsCartOpen(false);
-      setIsLoginPromptOpen(true);
-    }
-    else {
-      openPaymentModal();
+  // --- Event Selection Handlers ---
+  const handleEventSelection = (event: Event) => {
+    const hasItems = Object.keys(cartItems).length > 0;
+    if (hasItems && cartEvent && cartEvent.id !== event.id) {
+      setPendingEventSelection(event);
+      setIsCartConflictModalOpen(true);
+    } else {
+      setCartEvent(event);
+      setSelectedEvent(event);
     }
   };
 
+  const confirmChangeCartEvent = () => {
+    if (pendingEventSelection) {
+      clearCart();
+      setCartEvent(pendingEventSelection);
+      setSelectedEvent(pendingEventSelection);
+      setPendingEventSelection(null);
+      setIsCartConflictModalOpen(false);
+    }
+  };
+
+  const cancelChangeCartEvent = () => {
+    setPendingEventSelection(null);
+    setIsCartConflictModalOpen(false);
+  };
+
+  // --- Payment Handlers ---
+  const calculateTotal = () => {
+    return Object.entries(cartItems).reduce((sum, [variationIdStr, quantity]) => {
+      const details = findProductByVariationId(Number(variationIdStr));
+      return details ? sum + (details.variation.price * quantity) : sum;
+    }, 0);
+  };
+
+  // Exposed to PublicLayout via Context or Prop drilling could be complex.
+  // For now, we will pass these down or keep them here if they are triggered by Routes.
+  // Actually, Cart is inside PublicLayout now. But checkout triggers logic here.
+  // We need to expose a "handleCheckout" function to the Context or pass it down?
+  // Simpler approach: PublicLayout manages UI, but logic stays here? No, let's migrate.
+  // TEMPORARY FIX: Payment logic remains in App because Cart calls it.
+  
+  // ... (Existing Payment Logic Logic omitted for brevity, keeping as is mostly) ...
+  const openPaymentModal = () => {
+    const total = calculateTotal();
+    setPaymentAmount(total);
+    setIsCartOpen(false); // Cart logic is now in PublicLayout, this might need adjustment
+    setIsPaymentModalOpen(true);
+  }
+
   const handlePaymentSuccess = () => {
     if (!user) return;
+    const orderEvent = cartEvent || events[0];
+    const orderItems = Object.entries(cartItems).map(([variationIdStr, quantity]) => {
+      const details = findProductByVariationId(Number(variationIdStr));
+      if (!details) return null;
+      return {
+        variationId: details.variation.id,
+        productName: details.product.name,
+        variationName: details.variation.name,
+        quantity: quantity,
+        claimed: 0,
+        price: details.variation.price
+      };
+    }).filter((item): item is NonNullable<typeof item> => item !== null);
 
-    const cartDrinks = drinks.filter(drink => cartItems[drink.id] > 0);
-    const total = cartDrinks.reduce((sum, drink) => sum + (drink.price * cartItems[drink.id]), 0);
+    if (orderItems.length === 0) return;
 
+    const total = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const newOrder: Order = {
       orderId: `SK${Date.now().toString().slice(-6)}`,
       userId: user.id,
-      date: new Date().toLocaleDateString(),
-      event: selectedEvent || events[0],
-      items: cartDrinks.map(item => ({
-        drink: item, // Corrected: 'item' is already the Drink object
-        quantity: cartItems[item.id], // Corrected: quantity should come from cartItems, not item.quantity
-        claimed: 0
-      })),
+      isoDate: new Date().toISOString().split('T')[0],
+      purchaseTime: new Date().toLocaleTimeString('es-CL', { hour12: false }),
+      event: orderEvent,
+      items: orderItems,
       total: total,
       status: 'COMPLETED'
     };
@@ -179,26 +197,33 @@ function AppContent() {
     addOrder(newOrder);
     setSelectedOrder(newOrder);
     clearCart();
+    setCartEvent(null);
     setIsPaymentModalOpen(false);
     setIsOrderTypeModalOpen(true);
   };
 
+  const handleCheckout = () => {
+    if (!isAuthenticated || !user) {
+      setActionAfterLogin(() => openPaymentModal);
+      setIsCartOpen(false);
+      setIsLoginPromptOpen(true);
+    } else {
+      openPaymentModal();
+    }
+  };
+
+  // --- QR Handlers ---
   const handleOpenSingleQR = () => {
     if (!selectedOrder) return;
-
     const globalQrData = {
       type: 'GLOBAL',
       orderNumber: selectedOrder.orderId,
       eventName: selectedOrder.event.name,
       total: selectedOrder.total,
-      drinks: selectedOrder.items.map(item => `${item.drink.name} x${item.quantity}`)
+      drinks: selectedOrder.items.map(item => `${item.productName} (${item.variationName}) x${item.quantity}`)
     };
-
-    // Mark the order as fully claimed and store the global QR as active
     claimFullOrder(selectedOrder.orderId);
     storeActiveQRs(selectedOrder.orderId, [globalQrData]);
-
-    // Set data for display and open the modal
     setOrderData(globalQrData);
     setIsOrderTypeModalOpen(false);
     setIsQROpen(true);
@@ -221,11 +246,6 @@ function AppContent() {
     setIsMultiQrModalOpen(true);
   };
 
-  const handleOpenCartFromMenu = () => {
-    setSelectedEvent(null);
-    setIsCartOpen(true);
-  };
-
   return (
     <div className="min-h-screen bg-white">
       <AgeVerification isOpen={!isAgeVerified && !showUnderageBlock} onConfirm={handleAgeConfirm} onDeny={handleAgeDeny} />
@@ -233,22 +253,69 @@ function AppContent() {
 
       {isAgeVerified && (
         <>
-          <Header
-            isVisible={isHeaderVisible}
-            onOpenLogin={() => setIsLoginOpen(true)}
-            onOpenRegister={() => setIsRegisterOpen(true)}
-            onOpenCart={() => setIsCartOpen(true)}
+          <Routes>
+            {/* === RUTAS PÚBLICAS (Cliente) === */}
+            <Route element={
+              <PublicLayout 
+                isCartOpen={isCartOpen} 
+                onOpenCart={() => setIsCartOpen(true)} 
+                onCloseCart={() => setIsCartOpen(false)} 
+                onCheckout={handleCheckout}
+                isLoginOpen={isLoginOpen}
+                setIsLoginOpen={setIsLoginOpen}
+                isRegisterOpen={isRegisterOpen}
+                setIsRegisterOpen={setIsRegisterOpen}
+              />
+            }>
+              <Route 
+                path="/" 
+                element={
+                  <HomePage 
+                    events={events} 
+                    onSelectEvent={handleEventSelection} 
+                    onOpenRegister={() => {}} // Register is now managed by PublicLayout
+                  />
+                } 
+              />
+              <Route path="/events" element={<EventsPage onSelectEvent={handleEventSelection} />} />
+              <Route path="/history" element={<OrderHistoryPage onManageOrder={(order) => { setSelectedOrder(order); setIsManageOrderModalOpen(true); }} />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/login" element={<LoginPageHandler onOpenLogin={() => {}} />} />
+            </Route>
+
+            {/* === RUTAS PRIVADAS (Admin) === */}
+            <Route path="/admin" element={<AdminRoute />}>
+              <Route element={<AdminLayout />}>
+                <Route index element={<div className="p-10 text-2xl text-gray-600">Panel de Dashboard (Próximamente)</div>} />
+                <Route path="events" element={<div className="p-10 text-2xl text-gray-600">Gestión de Eventos</div>} />
+                <Route path="products" element={<div className="p-10 text-2xl text-gray-600">Gestión de Productos</div>} />
+                <Route path="sales" element={<div className="p-10 text-2xl text-gray-600">Ventas & Scanner</div>} />
+                <Route path="marketing" element={<div className="p-10 text-2xl text-gray-600">Marketing</div>} />
+                <Route path="cms" element={<div className="p-10 text-2xl text-gray-600">CMS Contenidos</div>} />
+              </Route>
+            </Route>
+          </Routes>
+
+          {/* --- Global Modals that sit on top of EVERYTHING (incl. Admin) --- */}
+          {/* NOTE: Payment logic is currently coupled to App state. Needs refactoring to Context or custom Hook to move fully to PublicLayout. */}
+          {/* For now, we render them here to keep functionality working. */}
+          
+          <ConfirmationModal
+            isOpen={isCartConflictModalOpen}
+            onClose={cancelChangeCartEvent}
+            onConfirm={confirmChangeCartEvent}
+            title="Cambiar de Evento"
+            message={`Tu carrito contiene productos de ${cartEvent?.name}. Si continúas, se vaciará tu carrito actual. ¿Deseas proceder?`}
+            confirmText="Sí, vaciar carrito"
+            cancelText="Cancelar"
           />
 
-          <main>
-            <Routes>
-              <Route path="/" element={<HomePage events={events} onSelectEvent={setSelectedEvent} onOpenRegister={() => setIsRegisterOpen(true)} />} />
-              <Route path="/events" element={<EventsPage onSelectEvent={setSelectedEvent} />} />
-              <Route path="/history" element={<OrderHistoryPage onManageOrder={(order) => { setSelectedOrder(order); setIsManageOrderModalOpen(true); }} />} />
-              <Route path="/profile" element={<ProfilePage />} /> {/* New route */}
-              <Route path="/login" element={<LoginPageHandler onOpenLogin={() => setIsLoginOpen(true)} />} />
-            </Routes>
-          </main>
+          <PaymentModal
+            isOpen={isPaymentModalOpen}
+            onClose={() => setIsPaymentModalOpen(false)}
+            onPaymentSuccess={handlePaymentSuccess}
+            totalAmount={paymentAmount}
+          />
 
           <LoginPrompt
             isOpen={isLoginPromptOpen}
@@ -259,14 +326,8 @@ function AppContent() {
             }}
           />
 
-          <PaymentModal
-            isOpen={isPaymentModalOpen}
-            onClose={() => setIsPaymentModalOpen(false)}
-            onPaymentSuccess={handlePaymentSuccess}
-            totalAmount={paymentAmount}
-          />
-
-          <OrderTypeSelectionModal
+           {/* Order & QR Modals */}
+           <OrderTypeSelectionModal
             isOpen={isOrderTypeModalOpen}
             onClose={() => setIsOrderTypeModalOpen(false)}
             onSelectSingleQR={handleOpenSingleQR}
@@ -286,37 +347,7 @@ function AppContent() {
             onClose={() => setIsMultiQrModalOpen(false)}
             qrDataList={multiQrData}
           />
-
-          <LoginModal
-            isOpen={isLoginOpen}
-            onClose={() => setIsLoginOpen(false)}
-            onSwitchToRegister={() => {
-              setIsLoginOpen(false);
-              setIsRegisterOpen(true);
-            }}
-            onLoginSuccess={handleLoginSuccess}
-          />
-          <RegisterModal isOpen={isRegisterOpen} onClose={() => setIsRegisterOpen(false)} onSwitchToLogin={() => {
-            setIsRegisterOpen(false);
-            setIsLoginOpen(true);
-          }} />
-
-          {selectedEvent && (
-            <DrinkMenu
-              eventName={selectedEvent.name}
-              drinks={drinks}
-              onClose={() => setSelectedEvent(null)}
-              onOpenCart={handleOpenCartFromMenu}
-            />
-          )}
-
-          <Cart
-            isOpen={isCartOpen}
-            onClose={() => setIsCartOpen(false)}
-            drinks={drinks}
-            onGenerateQR={handleCheckout}
-          />
-
+          
           {isQROpen && orderData && (
             <QRCode
               isOpen={isQROpen}
@@ -325,7 +356,22 @@ function AppContent() {
             />
           )}
 
-          <Footer />
+          {/* Drink Menu is special because it overlays the whole page when an event is clicked */}
+          {selectedEvent && (
+            <DrinkMenu
+              eventId={selectedEvent.id}
+              onClose={() => setSelectedEvent(null)}
+              onOpenCart={() => {
+                setSelectedEvent(null);
+                setIsCartOpen(true);
+              }}
+            />
+          )}
+
+          {/* Function to open cart from DrinkMenu */}
+          {/* This function needs to be defined outside the JSX, or passed as a prop */}
+          {/* For now, moving it outside the JSX block */}
+
           <Toaster />
         </>
       )}
@@ -334,4 +380,3 @@ function AppContent() {
 }
 
 export default App;
-
