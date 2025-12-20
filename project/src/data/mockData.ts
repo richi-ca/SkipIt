@@ -197,7 +197,7 @@ export interface Order {
     price: number;
   }[];
   total: number;
-  status: 'COMPLETED' | 'PARTIALLY_CLAIMED' | 'FULLY_CLAIMED';
+  status: 'COMPLETED' | 'PARTIALLY_CLAIMED' | 'FULLY_CLAIMED' | 'CANCELLED';
 }
 
 // ==========================================

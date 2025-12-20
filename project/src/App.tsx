@@ -30,6 +30,9 @@ import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
 import AdminRoute from './components/AdminRoute';
 
+import { orderService } from './services/orderService';
+import { toast } from 'react-hot-toast';
+
 function App() {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
@@ -164,42 +167,56 @@ function AppContent() {
     setIsPaymentModalOpen(true);
   }
 
-  const handlePaymentSuccess = () => {
+
+
+// ... (imports anteriores)
+
+// Dentro de AppContent:
+
+  const handlePaymentSuccess = async () => {
     if (!user) return;
-    const orderEvent = cartEvent || events[0];
-    const orderItems = Object.entries(cartItems).map(([variationIdStr, quantity]) => {
-      const details = findProductByVariationId(Number(variationIdStr));
-      if (!details) return null;
-      return {
-        variationId: details.variation.id,
-        productName: details.product.name,
-        variationName: details.variation.name,
-        quantity: quantity,
-        claimed: 0,
-        price: details.variation.price
-      };
-    }).filter((item): item is NonNullable<typeof item> => item !== null);
+    
+    // Si no hay evento asociado al carrito (caso raro), usar fallback o error
+    if (!cartEvent && (!cartItems || Object.keys(cartItems).length === 0)) {
+        toast.error("El carrito está vacío o no tiene evento asociado.");
+        return;
+    }
 
-    if (orderItems.length === 0) return;
+    // Preparar payload para el backend
+    // Solo necesitamos variationId y quantity. El backend calcula precios y totales.
+    const itemsPayload = Object.entries(cartItems).map(([variationIdStr, quantity]) => ({
+      variationId: Number(variationIdStr),
+      quantity: quantity
+    }));
 
-    const total = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const newOrder: Order = {
-      orderId: `SK${Date.now().toString().slice(-6)}`,
-      userId: user.id,
-      isoDate: new Date().toISOString().split('T')[0],
-      purchaseTime: new Date().toLocaleTimeString('es-CL', { hour12: false }),
-      event: orderEvent,
-      items: orderItems,
-      total: total,
-      status: 'COMPLETED'
-    };
+    // Si por alguna razón cartEvent es null pero hay items (lógica legacy), intentamos recuperar el evento de mockData o fallamos
+    // Para esta etapa de integración, asumiremos que cartEvent está setead correctamente por la lógica de "Un Carrito = Un Evento"
+    const targetEventId = cartEvent?.id || events[0].id; 
 
-    addOrder(newOrder);
-    setSelectedOrder(newOrder);
-    clearCart();
-    setCartEvent(null);
-    setIsPaymentModalOpen(false);
-    setIsOrderTypeModalOpen(true);
+    try {
+      // 1. Crear orden en el backend
+      const createdOrder = await orderService.createOrder({
+        eventId: targetEventId,
+        items: itemsPayload
+      });
+
+      // 2. Actualizar estado local
+      // Nota: addOrder del contexto podría ser redundante si OrderHistoryPage hace fetch, 
+      // pero sirve para el modal de éxito inmediato.
+      addOrder(createdOrder); 
+      setSelectedOrder(createdOrder);
+      
+      // 3. Limpiar y cerrar
+      clearCart();
+      setCartEvent(null);
+      setIsPaymentModalOpen(false);
+      setIsOrderTypeModalOpen(true); // Mostrar opciones de QR
+      toast.success("¡Pedido confirmado!");
+
+    } catch (error: any) {
+      console.error("Error al crear la orden:", error);
+      toast.error(error.message || "Hubo un problema al procesar tu pedido.");
+    }
   };
 
   const handleCheckout = () => {

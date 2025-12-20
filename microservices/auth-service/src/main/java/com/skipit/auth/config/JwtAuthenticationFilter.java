@@ -30,16 +30,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         
+        System.out.println(">>> JwtAuthFilter: Request to " + request.getRequestURI());
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println(">>> JwtAuthFilter: No Bearer token found. Proceeding filter chain.");
             filterChain.doFilter(request, response);
             return;
         }
 
         jwt = authHeader.substring(7); // Extract token after "Bearer "
+        System.out.println(">>> JwtAuthFilter: Token found.");
         
         try {
             userEmail = jwtService.extractUsername(jwt);

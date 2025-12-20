@@ -40,7 +40,7 @@ public class User implements UserDetails {
     private boolean hasPriorityAccess;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('admin', 'user-cli', 'scanner')")
+    @Column(columnDefinition = "VARCHAR(50)")
     private Role role;
 
     @Column
@@ -50,7 +50,7 @@ public class User implements UserDetails {
     private LocalDate dob;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('M', 'F', 'Otro')")
+    @Column(columnDefinition = "VARCHAR(20)")
     private Gender gender;
 
     @CreationTimestamp
