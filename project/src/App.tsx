@@ -271,7 +271,6 @@ function AppContent() {
                 path="/" 
                 element={
                   <HomePage 
-                    events={events} 
                     onSelectEvent={handleEventSelection} 
                     onOpenRegister={() => {}} // Register is now managed by PublicLayout
                   />

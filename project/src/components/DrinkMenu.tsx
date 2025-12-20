@@ -1,12 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Minus, X, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { events, menus } from '../data/mockData'; // Importar data centralizada
+import { Event, Menu } from '../data/mockData';
+import { catalogService } from '../services/catalogService';
 import advertenciaImg from '../assets/images/Advertencia.png';
 import advertenciaMovilImg from '../assets/images/Advertencia-movil.png';
 
 interface DrinkMenuProps {
-  eventId: number; // Ahora recibimos el ID del evento para buscar su menú
+  eventId: number;
   onClose: () => void;
   onOpenCart: () => void;
 }
@@ -19,17 +20,57 @@ export default function DrinkMenu({
   const { cartItems, addToCart, removeFromCart, getTotalItems } = useCart();
   const totalItems = getTotalItems();
 
-  // 1. Obtener el evento y su menú asociado
-  const { event, menu } = useMemo(() => {
-    const foundEvent = events.find(e => e.id === eventId);
-    if (!foundEvent) return { event: null, menu: null };
-    
-    // Si el evento tiene menuId, buscamos ese menú. Si no, usamos el primero por defecto.
-    const foundMenu = menus.find(m => m.id === (foundEvent.menuId || 1));
-    return { event: foundEvent, menu: foundMenu };
+  const [event, setEvent] = useState<Event | null>(null);
+  const [menu, setMenu] = useState<Menu | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMenuData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [eventData, menuData] = await Promise.all([
+          catalogService.getEventById(eventId),
+          catalogService.getMenuByEventId(eventId)
+        ]);
+        setEvent(eventData);
+        setMenu(menuData);
+      } catch (err: any) {
+        console.error('Error fetching menu data:', err);
+        setError('No se pudo cargar la carta de tragos. Por favor, intenta de nuevo.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuData();
   }, [eventId]);
 
-  if (!event || !menu) return null;
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-2xl max-w-4xl w-full h-[60vh] flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
+          <p className="text-gray-600">Cargando carta...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !event || !menu) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-2xl max-w-md w-full p-8 text-center relative">
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+          <div className="text-red-600 mb-4 font-bold text-lg">{error || 'Error al cargar los datos'}</div>
+          <button onClick={onClose} className="bg-purple-600 text-white px-6 py-2 rounded-full font-bold">Cerrar</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

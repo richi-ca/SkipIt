@@ -49,8 +49,8 @@ export default function PublicLayout({
     };
   }, []);
 
-  const handleLoginSuccess = (user: any) => {
-    login(user);
+  const handleLoginSuccess = (user: User, token: string) => {
+    login(user, token);
     setIsLoginOpen(false);
   };
 
