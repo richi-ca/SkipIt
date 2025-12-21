@@ -90,6 +90,31 @@ public class AuthService {
         return mapUserToDto(user);
     }
 
+    public UserDto updateUser(String email, UserDto request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (request.getName() != null) {
+            user.setName(request.getName());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+        if (request.getDob() != null) {
+            user.setDob(request.getDob());
+        }
+        if (request.getGender() != null) {
+            try {
+                user.setGender(User.Gender.valueOf(request.getGender()));
+            } catch (IllegalArgumentException e) {
+                // Ignore invalid gender or handle error
+            }
+        }
+
+        User savedUser = userRepository.save(user);
+        return mapUserToDto(savedUser);
+    }
+
     public UserDto mapUserToDto(User user) {
         return UserDto.builder()
                 .id(user.getId())

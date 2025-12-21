@@ -1,26 +1,41 @@
 import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
+import CustomDropdown from './CustomDropdown';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { format, parseISO, subYears } from 'date-fns';
 
 interface ProfileFormInputs {
   name: string;
   email: string;
   phone: string;
+  dob?: Date | null;
+  gender?: string;
 }
 
 interface ProfileFormProps {
-  onSave: (userData: ProfileFormInputs) => Promise<void>;
+  onSave: (userData: any) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
 }
 
+const genderOptions = [
+  { value: 'M', label: 'Masculino' },
+  { value: 'F', label: 'Femenino' },
+  { value: 'Otro', label: 'Otro' },
+];
+
 export default function ProfileForm({ onSave, onCancel, isSaving }: ProfileFormProps) {
   const { user } = useAuth();
-  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<ProfileFormInputs>({
+  const maxDate = subYears(new Date(), 18);
+
+  const { register, handleSubmit, reset, control, formState: { errors, isDirty } } = useForm<ProfileFormInputs>({
     defaultValues: {
       name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '',
+      dob: user?.dob ? parseISO(user.dob) : null,
+      gender: user?.gender || '',
     },
   });
 
@@ -30,13 +45,22 @@ export default function ProfileForm({ onSave, onCancel, isSaving }: ProfileFormP
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
+        dob: user.dob ? parseISO(user.dob) : null,
+        gender: user.gender || '',
       });
     }
   }, [user, reset]);
 
   const onSubmit = async (data: ProfileFormInputs) => {
     if (!isDirty || isSaving) return;
-    await onSave(data);
+    
+    // Format data for API (convert Date to string)
+    const formattedData = {
+      ...data,
+      dob: data.dob ? format(data.dob, 'yyyy-MM-dd') : undefined,
+    };
+    
+    await onSave(formattedData);
   };
 
   return (
@@ -79,6 +103,61 @@ export default function ProfileForm({ onSave, onCancel, isSaving }: ProfileFormP
           disabled={isSaving}
         />
       </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-2">Fecha de Nacimiento</label>
+          <Controller
+            name="dob"
+            control={control}
+            rules={{ required: 'La fecha es obligatoria.' }}
+            render={({ field, fieldState: { error } }) => (
+              <DatePicker
+                {...field}
+                disableFuture
+                maxDate={maxDate}
+                openTo="year"
+                views={['year', 'month', 'day']}
+                value={field.value || null}
+                onChange={(newValue) => field.onChange(newValue)}
+                disabled={isSaving}
+                slotProps={{
+                  textField: {
+                    id: 'dob',
+                    fullWidth: true,
+                    error: !!error,
+                    helperText: error?.message,
+                    sx: {
+                      '& .MuiInputBase-root': { borderRadius: '0.5rem', backgroundColor: 'white', height: '42px' },
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#D1D5DB' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#9CA3AF' },
+                      '& .MuiInputBase-input': { padding: '10px 14px' } 
+                    }
+                  }
+                }}
+              />
+            )}
+          />
+        </div>
+        <div>
+          <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">Sexo</label>
+          <Controller
+            name="gender"
+            control={control}
+            rules={{ required: 'El sexo es obligatorio.' }}
+            render={({ field }) => (
+              <CustomDropdown
+                id="gender"
+                value={field.value || ''}
+                onChange={field.onChange}
+                options={genderOptions}
+              />
+            )}
+          />
+          {errors.gender && <p role="alert" className="text-sm text-red-600 mt-2">{errors.gender.message}</p>}
+        </div>
+      </div>
+
       <div className="flex justify-end space-x-3">
         <button
           type="button"

@@ -28,4 +28,15 @@ public class UserController {
         
         return ResponseEntity.ok(authService.getUserByEmail(email));
     }
+
+    @org.springframework.web.bind.annotation.PutMapping("/me")
+    public ResponseEntity<UserDto> updateProfile(
+            @RequestHeader("Authorization") String token,
+            @org.springframework.web.bind.annotation.RequestBody UserDto request
+    ) {
+        String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+        String email = jwtService.extractUsername(jwtToken);
+        
+        return ResponseEntity.ok(authService.updateUser(email, request));
+    }
 }

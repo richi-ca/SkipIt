@@ -40,6 +40,10 @@ export default function OrderHistoryPage({ onManageOrder }: OrderHistoryPageProp
     };
 
     fetchOrders();
+
+    // Refresh when window gains focus (e.g. coming back from another tab or closing a modal that might have changed focus)
+    window.addEventListener('focus', fetchOrders);
+    return () => window.removeEventListener('focus', fetchOrders);
   }, [user]);
 
   // Si no hay usuario logueado, mostrar estado vacío o redirect
@@ -55,7 +59,9 @@ export default function OrderHistoryPage({ onManageOrder }: OrderHistoryPageProp
   // Lógica de Filtrado operando sobre 'orders' del estado
   const filteredOrders = orders.filter(order => {
     // 1. Filtro por Tab (Activos vs Historial)
-    const isFinished = order.status === 'FULLY_CLAIMED' || order.status === 'CANCELLED' || order.status === 'COMPLETED' || order.status === 'PARTIALLY_CLAIMED';
+    // - Activos: COMPLETED (recién pagado), PARTIALLY_CLAIMED (quedan cosas por cobrar)
+    // - Historial: FULLY_CLAIMED (ya se cobró todo), CANCELLED (anulado)
+    const isFinished = order.status === 'FULLY_CLAIMED' || order.status === 'CANCELLED';
     if (activeTab === 'active' && isFinished) return false;
     if (activeTab === 'history' && !isFinished) return false;
 

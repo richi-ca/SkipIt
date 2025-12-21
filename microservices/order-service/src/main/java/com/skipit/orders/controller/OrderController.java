@@ -31,4 +31,12 @@ public class OrderController {
     ) {
         return ResponseEntity.ok(orderService.getUserHistory(token));
     }
+
+    @PostMapping("/{orderId}/claim")
+    public ResponseEntity<OrderDto> claimOrder(
+            @PathVariable String orderId,
+            @RequestBody com.skipit.orders.dto.order.ClaimOrderRequest request
+    ) {
+        return ResponseEntity.ok(orderService.claimOrder(orderId, request));
+    }
 }

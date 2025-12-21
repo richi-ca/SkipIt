@@ -5,9 +5,11 @@ import ProfileForm from '../components/ProfileForm';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import DeleteAccountModal from '../components/DeleteAccountModal';
 import EditProfileModal from '../components/EditProfileModal'; // New import
+import { authService } from '../services/authService'; // Import authService
+import toast from 'react-hot-toast'; // Import toast for better feedback
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, login } = useAuth(); // Destructure login to update user context
   const navigate = useNavigate();
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -32,14 +34,18 @@ export default function ProfilePage() {
     );
   }
 
-  const handleSave = async (userData: { name?: string; email?: string; phone?: string }) => {
-    console.log('Saving user data:', userData);
-    // In a real application, you would call an API here to update the user profile.
-    // For now, we'll just simulate a delay and then navigate back or show a success message.
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    alert('Perfil actualizado con éxito (simulado)!');
-    // Optionally, refresh user data in AuthContext if it's not automatically updated by the backend response
-    setIsEditProfileModalOpen(false); // Close modal after save
+  const handleSave = async (userData: { name?: string; email?: string; phone?: string; dob?: string; gender?: string }) => {
+    try {
+      const updatedUser = await authService.updateProfile(userData);
+      // Update the user in the context to reflect changes immediately
+      login(updatedUser, localStorage.getItem('token') || undefined);
+      toast.success('Perfil actualizado con éxito');
+      setIsEditProfileModalOpen(false); // Close modal after save
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Error al actualizar el perfil.');
+      throw error; // Re-throw to be caught by the modal's error handler if needed
+    }
   };
 
   const handleCancel = () => {
@@ -77,9 +83,11 @@ export default function ProfilePage() {
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold text-purple-700 mb-6">Mis Datos</h1>
       <div className="bg-white shadow-md rounded-lg p-6">
-        <p className="text-gray-800 text-lg mb-2">Nombre: {user.name}</p>
-        <p className="text-gray-800 text-lg mb-2">Email: {user.email}</p>
-        {user.phone && <p className="text-gray-800 text-lg mb-2">Teléfono: {user.phone}</p>}
+        <p className="text-gray-800 text-lg mb-2"><span className="font-semibold">Nombre:</span> {user.name}</p>
+        <p className="text-gray-800 text-lg mb-2"><span className="font-semibold">Email:</span> {user.email}</p>
+        {user.phone && <p className="text-gray-800 text-lg mb-2"><span className="font-semibold">Teléfono:</span> {user.phone}</p>}
+        {user.dob && <p className="text-gray-800 text-lg mb-2"><span className="font-semibold">Fecha de Nacimiento:</span> {user.dob}</p>}
+        {user.gender && <p className="text-gray-800 text-lg mb-2"><span className="font-semibold">Género:</span> {user.gender}</p>}
         
         <div className="mt-8 flex space-x-4">
           <button

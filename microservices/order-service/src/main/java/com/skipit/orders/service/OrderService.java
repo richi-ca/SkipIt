@@ -148,6 +148,54 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public OrderDto claimOrder(String orderId, com.skipit.orders.dto.order.ClaimOrderRequest request) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        if (order.getStatus() == Order.OrderStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot claim cancelled order");
+        }
+
+        for (com.skipit.orders.dto.order.ClaimOrderRequest.ClaimItemRequest itemRequest : request.getItems()) {
+            OrderItem orderItem = order.getItems().stream()
+                    .filter(item -> item.getVariationId().equals(itemRequest.getVariationId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Variation not in order: " + itemRequest.getVariationId()));
+
+            int newClaimed = orderItem.getClaimed() + itemRequest.getQuantity();
+            if (newClaimed > orderItem.getQuantity()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot claim more than ordered. Ordered: " + orderItem.getQuantity() + ", Already Claimed: " + orderItem.getClaimed() + ", Requesting: " + itemRequest.getQuantity());
+            }
+            orderItem.setClaimed(newClaimed);
+        }
+
+        // Recalcular estado de la orden
+        boolean allFullyClaimed = order.getItems().stream()
+                .allMatch(item -> item.getClaimed().equals(item.getQuantity()));
+        
+        boolean anyClaimed = order.getItems().stream()
+                .anyMatch(item -> item.getClaimed() > 0);
+
+        if (allFullyClaimed) {
+            order.setStatus(Order.OrderStatus.FULLY_CLAIMED);
+        } else if (anyClaimed) {
+            order.setStatus(Order.OrderStatus.PARTIALLY_CLAIMED);
+        }
+
+        Order savedOrder = orderRepository.save(order);
+        
+        // Obtener evento para el DTO
+        EventDto eventDto = null;
+        try {
+            eventDto = catalogClient.getEventById(savedOrder.getEventId());
+        } catch (Exception e) {
+             eventDto = EventDto.builder().id(savedOrder.getEventId()).name("Unknown Event").build();
+        }
+
+        return mapToDto(savedOrder, eventDto);
+    }
+
     private OrderDto mapToDto(Order order, EventDto eventDto) {
         List<OrderItemDto> itemDtos = order.getItems().stream()
                 .map(item -> OrderItemDto.builder()
