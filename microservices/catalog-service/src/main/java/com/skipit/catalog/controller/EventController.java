@@ -1,6 +1,7 @@
 package com.skipit.catalog.controller;
 
 import com.skipit.catalog.dto.event.EventDto;
+import com.skipit.catalog.dto.menu.MenuDto;
 import com.skipit.catalog.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,5 +34,10 @@ public class EventController {
     @GetMapping("/{id}")
     public ResponseEntity<EventDto> getEventById(@PathVariable Integer id) {
         return ResponseEntity.ok(eventService.getEventById(id));
+    }
+
+    @GetMapping("/{id}/menu")
+    public ResponseEntity<MenuDto> getMenuByEventId(@PathVariable Integer id) {
+        return ResponseEntity.ok(eventService.getMenuByEventId(id));
     }
 }

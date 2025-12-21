@@ -84,7 +84,13 @@ public class AuthService {
                 .build();
     }
 
-    private UserDto mapUserToDto(User user) {
+    public UserDto getUserByEmail(String email) {
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return mapUserToDto(user);
+    }
+
+    public UserDto mapUserToDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
                 .name(user.getName())

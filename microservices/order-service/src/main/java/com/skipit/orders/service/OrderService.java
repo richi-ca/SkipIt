@@ -12,8 +12,10 @@ import com.skipit.orders.entity.Order;
 import com.skipit.orders.entity.OrderItem;
 import com.skipit.orders.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -40,12 +42,17 @@ public class OrderService {
         // 1. Obtener User ID del token (sin llamar a Auth Service, confiamos en el token)
         // El token viene como "Bearer <token>", necesitamos limpiarlo
         String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
-        String userId = jwtService.extractClaim(jwtToken, claims -> claims.get("userId", String.class));
+        String userId;
+        try {
+            userId = jwtService.extractClaim(jwtToken, claims -> claims.get("userId", String.class));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+        }
         
         if (userId == null) {
             // Fallback: Si el claim userId no está, usamos el subject (email) o lanzamos error
             // Para mantener compatibilidad con el diseño, asumimos que Auth Service pone el userId en los claims
-            throw new RuntimeException("Invalid Token: userId claim missing");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Token: userId claim missing");
         }
 
         // 2. Validar Evento (Llamada HTTP a Catalog Service)
@@ -112,7 +119,16 @@ public class OrderService {
     @Transactional(readOnly = true)
     public List<OrderDto> getUserHistory(String token) {
         String jwtToken = token.startsWith("Bearer ") ? token.substring(7) : token;
-        String userId = jwtService.extractClaim(jwtToken, claims -> claims.get("userId", String.class));
+        String userId;
+        try {
+            userId = jwtService.extractClaim(jwtToken, claims -> claims.get("userId", String.class));
+        } catch (Exception e) {
+             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+        }
+
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Token: userId claim missing");
+        }
 
         return orderRepository.findByUserIdOrderByIsoDateDesc(userId).stream()
                 .map(order -> {

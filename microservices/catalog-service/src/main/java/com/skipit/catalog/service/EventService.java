@@ -1,6 +1,7 @@
 package com.skipit.catalog.service;
 
 import com.skipit.catalog.dto.event.EventDto;
+import com.skipit.catalog.dto.menu.MenuDto;
 import com.skipit.catalog.entity.Event;
 import com.skipit.catalog.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ public class EventService {
 
     @Autowired
     private EventRepository eventRepository;
+
+    @Autowired
+    private MenuService menuService;
 
     @Transactional(readOnly = true)
     public List<EventDto> getAllEvents() {
@@ -44,6 +48,18 @@ public class EventService {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
         return mapToDto(event);
+    }
+
+    @Transactional(readOnly = true)
+    public MenuDto getMenuByEventId(Integer eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
+        
+        if (event.getMenu() == null) {
+            throw new RuntimeException("Menu not found for event ID: " + eventId);
+        }
+
+        return menuService.getMenuById(event.getMenu().getId());
     }
 
     private EventDto mapToDto(Event event) {
