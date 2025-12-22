@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AgeVerification from './components/AgeVerification';
 import UnderageBlock from './components/UnderageBlock';
-import HomePage from './pages/HomePage';
-import EventsPage from './pages/EventsPage';
-import OrderHistoryPage from './pages/OrderHistoryPage';
-import ProfilePage from './pages/ProfilePage';
-import LoginPageHandler from './pages/LoginPageHandler';
 import { events, Event, Order, findProductByVariationId } from './data/mockData';
 import LoginPrompt from './components/LoginPrompt';
 import PaymentModal from './components/PaymentModal';
@@ -28,10 +23,52 @@ import DrinkMenu from './components/DrinkMenu';
 // Layouts
 import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
+import ScannerLayout from './layouts/ScannerLayout';
 import AdminRoute from './components/AdminRoute';
+
+// Pages
+import HomePage from './pages/HomePage';
+import EventsPage from './pages/EventsPage';
+import OrderHistoryPage from './pages/OrderHistoryPage';
+import ProfilePage from './pages/ProfilePage';
+import LoginPageHandler from './pages/LoginPageHandler';
+import ScannerDashboard from './pages/ScannerDashboard';
+import ScannerHistoryPage from './pages/ScannerHistoryPage';
 
 import { orderService } from './services/orderService';
 import { toast } from 'react-hot-toast';
+
+// --- Security Components ---
+function SecurityGuard() {
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user?.role === 'scanner') {
+       // Force scanner role to stay in /scanner
+       if (!location.pathname.startsWith('/scanner')) {
+          navigate('/scanner', { replace: true });
+       }
+    }
+  }, [user, location, navigate]);
+
+  return null;
+}
+
+function ClientGuard({ children }: { children: React.ReactElement }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return null; // Wait for auth to settle
+
+  // Scanner users should NEVER see the public client view
+  if (user?.role === 'scanner') {
+    return <Navigate to="/scanner" replace />;
+  }
+
+  // Admins are allowed (God mode), Clients are allowed, Guests are allowed.
+  return children;
+}
 
 function App() {
   return (
@@ -265,6 +302,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SecurityGuard />
       <AgeVerification isOpen={!isAgeVerified && !showUnderageBlock} onConfirm={handleAgeConfirm} onDeny={handleAgeDeny} />
       <UnderageBlock isOpen={showUnderageBlock} onGoBack={handleGoBack} />
 
@@ -273,16 +311,18 @@ function AppContent() {
           <Routes>
             {/* === RUTAS PÚBLICAS (Cliente) === */}
             <Route element={
-              <PublicLayout 
-                isCartOpen={isCartOpen} 
-                onOpenCart={() => setIsCartOpen(true)} 
-                onCloseCart={() => setIsCartOpen(false)} 
-                onCheckout={handleCheckout}
-                isLoginOpen={isLoginOpen}
-                setIsLoginOpen={setIsLoginOpen}
-                isRegisterOpen={isRegisterOpen}
-                setIsRegisterOpen={setIsRegisterOpen}
-              />
+              <ClientGuard>
+                <PublicLayout 
+                  isCartOpen={isCartOpen} 
+                  onOpenCart={() => setIsCartOpen(true)} 
+                  onCloseCart={() => setIsCartOpen(false)} 
+                  onCheckout={handleCheckout}
+                  isLoginOpen={isLoginOpen}
+                  setIsLoginOpen={setIsLoginOpen}
+                  isRegisterOpen={isRegisterOpen}
+                  setIsRegisterOpen={setIsRegisterOpen}
+                />
+              </ClientGuard>
             }>
               <Route 
                 path="/" 
@@ -309,6 +349,12 @@ function AppContent() {
                 <Route path="marketing" element={<div className="p-10 text-2xl text-gray-600">Marketing</div>} />
                 <Route path="cms" element={<div className="p-10 text-2xl text-gray-600">CMS Contenidos</div>} />
               </Route>
+            </Route>
+
+            {/* === RUTAS PRIVADAS (Scanner/Staff) === */}
+            <Route path="/scanner" element={<ScannerLayout />}>
+              <Route index element={<ScannerDashboard />} />
+              <Route path="history" element={<ScannerHistoryPage />} />
             </Route>
           </Routes>
 

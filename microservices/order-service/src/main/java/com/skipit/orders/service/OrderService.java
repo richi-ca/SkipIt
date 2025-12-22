@@ -148,6 +148,22 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public OrderDto getOrderById(String orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        
+        // Obtener evento para el DTO
+        EventDto eventDto = null;
+        try {
+            eventDto = catalogClient.getEventById(order.getEventId());
+        } catch (Exception e) {
+             eventDto = EventDto.builder().id(order.getEventId()).name("Unknown Event").build();
+        }
+
+        return mapToDto(order, eventDto);
+    }
+
     @Transactional
     public OrderDto claimOrder(String orderId, com.skipit.orders.dto.order.ClaimOrderRequest request) {
         Order order = orderRepository.findById(orderId)

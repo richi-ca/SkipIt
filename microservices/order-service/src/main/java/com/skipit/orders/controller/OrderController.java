@@ -32,6 +32,11 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getUserHistory(token));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderDto> getOrderById(@PathVariable String id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
+    }
+
     @PostMapping("/{orderId}/claim")
     public ResponseEntity<OrderDto> claimOrder(
             @PathVariable String orderId,

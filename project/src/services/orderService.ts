@@ -25,6 +25,12 @@ export const orderService = {
     });
   },
 
+  getOrderById: async (orderId: string): Promise<Order> => {
+    return baseFetch<Order>(`/orders/${orderId}`, {
+      method: 'GET',
+    });
+  },
+
   claimOrder: async (orderId: string, itemsToClaim: { variationId: number; quantity: number }[]): Promise<Order> => {
     return baseFetch<Order>(`/orders/${orderId}/claim`, {
       method: 'POST',
