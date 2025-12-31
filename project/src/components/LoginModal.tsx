@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { X, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { users, User } from '../data/mockData';
+import { User } from '../data/mockData';
+import { authService } from '../services/authService';
 import logoSkipIT from '../assets/images/Logo1.png';
 import { Link } from 'react-router-dom';
 
@@ -16,7 +17,7 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToRegister: () => void;
-  onLoginSuccess: (user: User) => void;
+  onLoginSuccess: (user: User, token: string) => void;
 }
 
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLoginSuccess }: LoginModalProps) {
@@ -67,22 +68,22 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
 
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     setServerError('');
-    // Simulamos una llamada a la API
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await authService.login({
+        email: data.email,
+        password: data.password
+      });
 
-    const user = users.find(u => u.email === data.email);
-
-    // In a real app, password verification would be handled by a secure backend.
-    if (user) {
       if (data.rememberMe) {
         localStorage.setItem('rememberedEmail', data.email);
       } else {
         localStorage.removeItem('rememberedEmail');
       }
-      onLoginSuccess(user);
+
+      onLoginSuccess(response.user, response.token);
       onClose();
-    } else {
-      setServerError('Email o contraseña incorrectos. Por favor, inténtalo de nuevo.');
+    } catch (error: any) {
+      setServerError(error.message || 'Email o contraseña incorrectos. Por favor, inténtalo de nuevo.');
     }
   };
 

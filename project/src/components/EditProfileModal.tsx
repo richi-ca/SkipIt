@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (userData: { name?: string; email?: string; phone?: string }) => Promise<void>;
+  onSave: (userData: { name?: string; email?: string; phone?: string; dob?: string; gender?: string }) => Promise<void>;
 }
 
 export default function EditProfileModal({ isOpen, onClose, onSave }: EditProfileModalProps) {
@@ -14,14 +14,14 @@ export default function EditProfileModal({ isOpen, onClose, onSave }: EditProfil
 
   if (!isOpen) return null;
 
-  const handleSave = async (formData: { name?: string; email?: string; phone?: string }) => {
+  const handleSave = async (formData: { name?: string; email?: string; phone?: string; dob?: string; gender?: string }) => {
     setSaving(true);
     try {
       await onSave(formData);
-      toast.success('Perfil actualizado correctamente.');
+      // Toast is handled in parent
       onClose();
     } catch (error) {
-      toast.error('Error al actualizar el perfil.');
+      // Toast is handled in parent
       console.error("Error saving profile:", error);
     } finally {
       setSaving(false);

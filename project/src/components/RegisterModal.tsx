@@ -11,6 +11,9 @@ import { TextField } from '@mui/material';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { format, subYears } from 'date-fns';
+import { authService } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 // --- Sub-componente para el medidor de fortaleza de contraseña ---
 const PasswordStrengthMeter = ({ password }: { password?: string }) => {
@@ -69,9 +72,11 @@ interface RegisterModalProps {
 }
 
 export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: RegisterModalProps) {
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [serverError, setServerError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const maxDate = subYears(new Date(), 18);
 
@@ -110,6 +115,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
       setTimeout(() => {
         reset();
         setFormSuccess('');
+        setServerError('');
         setShowPassword(false);
         setShowConfirmPassword(false);
       }, 200);
@@ -120,34 +126,29 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     setFormSuccess('');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    setServerError('');
+    
+    try {
+      const response = await authService.register({
+        name: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+        dob: data.dob ? format(data.dob, 'yyyy-MM-dd') : null,
+        gender: data.gender,
+      });
 
-    const newUser = {
-      id: Date.now(),
-      name: `${data.firstName} ${data.lastName}`,
-      email: data.email,
-      phone: data.phone,
-      dob: data.dob ? format(data.dob, 'yyyy-MM-dd') : null,
-      gender: data.gender,
-      password_hash: data.password,
-    };
+      setFormSuccess('¡Registro exitoso! Iniciando sesión...');
+      
+      setTimeout(() => {
+        login(response.user, response.token);
+        onClose();
+        toast.success(`¡Bienvenido, ${response.user.name}!`);
+      }, 1500);
 
-    const jsonString = JSON.stringify(newUser, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `new_user_${newUser.id}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    setFormSuccess('¡Registro exitoso! Serás redirigido al login.');
-    setTimeout(() => {
-      onClose();
-      onSwitchToLogin();
-    }, 2000);
+    } catch (error: any) {
+      setServerError(error.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
+    }
   };
 
   return (
@@ -176,6 +177,13 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               <div role="alert" className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex items-center space-x-2">
                 <CheckCircle className="w-5 h-5" />
                 <span className="text-sm">{formSuccess}</span>
+              </div>
+            )}
+
+            {serverError && (
+              <div role="alert" className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5" />
+                <span className="text-sm">{serverError}</span>
               </div>
             )}
 

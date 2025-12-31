@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AgeVerification from './components/AgeVerification';
 import UnderageBlock from './components/UnderageBlock';
-import HomePage from './pages/HomePage';
-import EventsPage from './pages/EventsPage';
-import OrderHistoryPage from './pages/OrderHistoryPage';
-import ProfilePage from './pages/ProfilePage';
-import LoginPageHandler from './pages/LoginPageHandler';
 import { events, Event, Order, findProductByVariationId } from './data/mockData';
 import LoginPrompt from './components/LoginPrompt';
 import PaymentModal from './components/PaymentModal';
@@ -28,7 +23,52 @@ import DrinkMenu from './components/DrinkMenu';
 // Layouts
 import PublicLayout from './layouts/PublicLayout';
 import AdminLayout from './layouts/AdminLayout';
+import ScannerLayout from './layouts/ScannerLayout';
 import AdminRoute from './components/AdminRoute';
+
+// Pages
+import HomePage from './pages/HomePage';
+import EventsPage from './pages/EventsPage';
+import OrderHistoryPage from './pages/OrderHistoryPage';
+import ProfilePage from './pages/ProfilePage';
+import LoginPageHandler from './pages/LoginPageHandler';
+import ScannerDashboard from './pages/ScannerDashboard';
+import ScannerHistoryPage from './pages/ScannerHistoryPage';
+
+import { orderService } from './services/orderService';
+import { toast } from 'react-hot-toast';
+
+// --- Security Components ---
+function SecurityGuard() {
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user?.role === 'scanner') {
+       // Force scanner role to stay in /scanner
+       if (!location.pathname.startsWith('/scanner')) {
+          navigate('/scanner', { replace: true });
+       }
+    }
+  }, [user, location, navigate]);
+
+  return null;
+}
+
+function ClientGuard({ children }: { children: React.ReactElement }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return null; // Wait for auth to settle
+
+  // Scanner users should NEVER see the public client view
+  if (user?.role === 'scanner') {
+    return <Navigate to="/scanner" replace />;
+  }
+
+  // Admins are allowed (God mode), Clients are allowed, Guests are allowed.
+  return children;
+}
 
 function App() {
   return (
@@ -164,42 +204,56 @@ function AppContent() {
     setIsPaymentModalOpen(true);
   }
 
-  const handlePaymentSuccess = () => {
+
+
+// ... (imports anteriores)
+
+// Dentro de AppContent:
+
+  const handlePaymentSuccess = async () => {
     if (!user) return;
-    const orderEvent = cartEvent || events[0];
-    const orderItems = Object.entries(cartItems).map(([variationIdStr, quantity]) => {
-      const details = findProductByVariationId(Number(variationIdStr));
-      if (!details) return null;
-      return {
-        variationId: details.variation.id,
-        productName: details.product.name,
-        variationName: details.variation.name,
-        quantity: quantity,
-        claimed: 0,
-        price: details.variation.price
-      };
-    }).filter((item): item is NonNullable<typeof item> => item !== null);
+    
+    // Si no hay evento asociado al carrito (caso raro), usar fallback o error
+    if (!cartEvent && (!cartItems || Object.keys(cartItems).length === 0)) {
+        toast.error("El carrito está vacío o no tiene evento asociado.");
+        return;
+    }
 
-    if (orderItems.length === 0) return;
+    // Preparar payload para el backend
+    // Solo necesitamos variationId y quantity. El backend calcula precios y totales.
+    const itemsPayload = Object.entries(cartItems).map(([variationIdStr, quantity]) => ({
+      variationId: Number(variationIdStr),
+      quantity: quantity
+    }));
 
-    const total = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const newOrder: Order = {
-      orderId: `SK${Date.now().toString().slice(-6)}`,
-      userId: user.id,
-      isoDate: new Date().toISOString().split('T')[0],
-      purchaseTime: new Date().toLocaleTimeString('es-CL', { hour12: false }),
-      event: orderEvent,
-      items: orderItems,
-      total: total,
-      status: 'COMPLETED'
-    };
+    // Si por alguna razón cartEvent es null pero hay items (lógica legacy), intentamos recuperar el evento de mockData o fallamos
+    // Para esta etapa de integración, asumiremos que cartEvent está setead correctamente por la lógica de "Un Carrito = Un Evento"
+    const targetEventId = cartEvent?.id || events[0].id; 
 
-    addOrder(newOrder);
-    setSelectedOrder(newOrder);
-    clearCart();
-    setCartEvent(null);
-    setIsPaymentModalOpen(false);
-    setIsOrderTypeModalOpen(true);
+    try {
+      // 1. Crear orden en el backend
+      const createdOrder = await orderService.createOrder({
+        eventId: targetEventId,
+        items: itemsPayload
+      });
+
+      // 2. Actualizar estado local
+      // Nota: addOrder del contexto podría ser redundante si OrderHistoryPage hace fetch, 
+      // pero sirve para el modal de éxito inmediato.
+      addOrder(createdOrder); 
+      setSelectedOrder(createdOrder);
+      
+      // 3. Limpiar y cerrar
+      clearCart();
+      setCartEvent(null);
+      setIsPaymentModalOpen(false);
+      setIsOrderTypeModalOpen(true); // Mostrar opciones de QR
+      toast.success("¡Pedido confirmado!");
+
+    } catch (error: any) {
+      console.error("Error al crear la orden:", error);
+      toast.error(error.message || "Hubo un problema al procesar tu pedido.");
+    }
   };
 
   const handleCheckout = () => {
@@ -248,6 +302,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SecurityGuard />
       <AgeVerification isOpen={!isAgeVerified && !showUnderageBlock} onConfirm={handleAgeConfirm} onDeny={handleAgeDeny} />
       <UnderageBlock isOpen={showUnderageBlock} onGoBack={handleGoBack} />
 
@@ -256,22 +311,23 @@ function AppContent() {
           <Routes>
             {/* === RUTAS PÚBLICAS (Cliente) === */}
             <Route element={
-              <PublicLayout 
-                isCartOpen={isCartOpen} 
-                onOpenCart={() => setIsCartOpen(true)} 
-                onCloseCart={() => setIsCartOpen(false)} 
-                onCheckout={handleCheckout}
-                isLoginOpen={isLoginOpen}
-                setIsLoginOpen={setIsLoginOpen}
-                isRegisterOpen={isRegisterOpen}
-                setIsRegisterOpen={setIsRegisterOpen}
-              />
+              <ClientGuard>
+                <PublicLayout 
+                  isCartOpen={isCartOpen} 
+                  onOpenCart={() => setIsCartOpen(true)} 
+                  onCloseCart={() => setIsCartOpen(false)} 
+                  onCheckout={handleCheckout}
+                  isLoginOpen={isLoginOpen}
+                  setIsLoginOpen={setIsLoginOpen}
+                  isRegisterOpen={isRegisterOpen}
+                  setIsRegisterOpen={setIsRegisterOpen}
+                />
+              </ClientGuard>
             }>
               <Route 
                 path="/" 
                 element={
                   <HomePage 
-                    events={events} 
                     onSelectEvent={handleEventSelection} 
                     onOpenRegister={() => {}} // Register is now managed by PublicLayout
                   />
@@ -293,6 +349,12 @@ function AppContent() {
                 <Route path="marketing" element={<div className="p-10 text-2xl text-gray-600">Marketing</div>} />
                 <Route path="cms" element={<div className="p-10 text-2xl text-gray-600">CMS Contenidos</div>} />
               </Route>
+            </Route>
+
+            {/* === RUTAS PRIVADAS (Scanner/Staff) === */}
+            <Route path="/scanner" element={<ScannerLayout />}>
+              <Route index element={<ScannerDashboard />} />
+              <Route path="history" element={<ScannerHistoryPage />} />
             </Route>
           </Routes>
 

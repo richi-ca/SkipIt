@@ -8,17 +8,23 @@ interface LoginPageHandlerProps {
 
 const LoginPageHandler: React.FC<LoginPageHandlerProps> = ({ onOpenLogin }) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     if (!isAuthenticated) {
       onOpenLogin();
       navigate('/', { replace: true });
     } else {
-      // If already authenticated, redirect to profile or home
-      navigate('/profile', { replace: true });
+      // Intelligent redirection based on role
+      if (user?.role === 'scanner') {
+        navigate('/scanner', { replace: true });
+      } else if (user?.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/profile', { replace: true });
+      }
     }
-  }, [isAuthenticated, onOpenLogin, navigate]);
+  }, [isAuthenticated, user, onOpenLogin, navigate]);
 
   return (
     <div className="flex justify-center items-center h-screen">

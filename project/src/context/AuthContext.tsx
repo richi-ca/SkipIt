@@ -1,12 +1,14 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { User } from '../data/mockData'; // Import the unified User type
+import { User } from '../data/mockData';
+import { authService } from '../services/authService';
 
 // Define the shape of the context
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (userData: User) => void;
+  isLoading: boolean;
+  login: (userData: User, token?: string) => void;
   logout: () => void;
   actionAfterLogin: (() => void) | null;
   setActionAfterLogin: (action: (() => void) | null) => void;
@@ -18,16 +20,39 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Create a provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [actionAfterLogin, setActionAfterLogin] = useState<(() => void) | null>(null);
 
-  const login = (userData: User) => {
+  // Check for existing token and load user on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const userData = await authService.getMe();
+          setUser(userData);
+        } catch (error) {
+          console.error('Failed to restore session:', error);
+          localStorage.removeItem('token');
+          setUser(null);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initAuth();
+  }, []);
+
+  const login = (userData: User, token?: string) => {
     setUser(userData);
-    // In a real app, you'd also store the token or session info
+    if (token) {
+      localStorage.setItem('token', token);
+    }
   };
 
   const logout = () => {
     setUser(null);
-    // In a real app, you'd also clear the token or session info
+    localStorage.removeItem('token');
   };
 
   const isAuthenticated = !!user;
@@ -41,7 +66,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [isAuthenticated, actionAfterLogin]);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, actionAfterLogin, setActionAfterLogin }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      isLoading,
+      login, 
+      logout, 
+      actionAfterLogin, 
+      setActionAfterLogin 
+    }}>
       {children}
     </AuthContext.Provider>
   );

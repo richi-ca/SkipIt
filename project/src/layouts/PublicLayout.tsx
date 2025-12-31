@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import LoginModal from '../components/LoginModal';
@@ -27,11 +27,19 @@ export default function PublicLayout({
   isCartOpen, onOpenCart, onCloseCart, onCheckout,
   isLoginOpen, setIsLoginOpen, isRegisterOpen, setIsRegisterOpen
 }: PublicLayoutProps) {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
   
   // Estado para la visibilidad del Header en scroll
   const [isHeaderVisible, setIsHeaderVisible] = React.useState(true);
   const lastScrollY = React.useRef(0);
+
+  // Security: Block 'scanner' role from accessing Public Layout (Home, Events, etc.)
+  React.useEffect(() => {
+    if (user?.role === 'scanner') {
+      navigate('/scanner', { replace: true });
+    }
+  }, [user, navigate]);
 
   React.useEffect(() => {
     const controlHeader = () => {
@@ -49,9 +57,16 @@ export default function PublicLayout({
     };
   }, []);
 
-  const handleLoginSuccess = (user: any) => {
-    login(user);
+  const handleLoginSuccess = (user: User, token: string) => {
+    login(user, token);
     setIsLoginOpen(false);
+    
+    // Redirect based on role
+    if (user.role === 'scanner') {
+      navigate('/scanner');
+    } else if (user.role === 'admin') {
+      navigate('/admin');
+    }
   };
 
   return (

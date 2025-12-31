@@ -37,16 +37,17 @@ const FilterPopover = (props: FilterPopoverProps) => {
     };
   }, [popoverRef]);
 
-  const activeFilterCount = [filtroEvento, filtroMes].filter(f => f !== 'todos').length;
+  // Use 'all' as the standard default value
+  const activeFilterCount = [filtroEvento, filtroMes].filter(f => f !== 'all').length;
 
   // Adaptar las opciones al formato de CustomDropdown
   const opcionesEventoFormato = [
-    { value: 'todos', label: 'Todos los eventos' },
+    { value: 'all', label: 'Todos los eventos' },
     ...opcionesEvento.map(e => ({ value: e.id.toString(), label: e.name }))
   ];
 
   const opcionesMesFormato = [
-    { value: 'todos', label: 'Todos los meses' },
+    { value: 'all', label: 'Todos los meses' },
     ...opcionesMes
   ];
 

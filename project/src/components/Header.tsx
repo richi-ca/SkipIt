@@ -17,7 +17,7 @@ interface HeaderProps {
 
 export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisible }: HeaderProps) {
   const { getTotalItems } = useCart();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const cartItemCount = getTotalItems();
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
@@ -37,6 +37,19 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
     `block text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50 ${
       isActive ? 'text-purple-600 bg-purple-100' : ''
     }`;
+
+  if (isLoading) {
+    return (
+      <header className={`bg-white shadow-lg sticky top-0 z-50 h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8`}>
+        <div className="animate-pulse flex space-x-4 w-full max-w-7xl mx-auto">
+          <div className="rounded-full bg-gray-200 h-10 w-32"></div>
+          <div className="flex-1 space-y-6 py-1">
+            <div className="h-2 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
