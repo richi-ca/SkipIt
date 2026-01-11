@@ -61,7 +61,7 @@ const ManageOrderModal: React.FC<ManageOrderModalProps> = ({ isOpen, onClose, or
       }
     });
 
-    claimItems(order.orderId, claimUpdateData); 
+    // claimItems(order.orderId, claimUpdateData); // REMOVED: Scanning triggers claim, not generation.
     storeActiveQRs(order.orderId, qrDataList);
     onShowQRs(qrDataList);
   };
