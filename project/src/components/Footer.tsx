@@ -54,7 +54,7 @@ export default function Footer() {
             <div>
               <h3 className="font-bold mb-4">Síguenos</h3>
                                 <div className="flex space-x-4">
-                                  <a href="https://www.instagram.com/skipit__cl/" target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white flex items-center gap-2">
+                                  <a href="https://www.instagram.com/skipit.cl/" target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white flex items-center gap-2">
                                     <Instagram className="w-5 h-5" />
                                     <span>Instagram</span>
                                   </a>

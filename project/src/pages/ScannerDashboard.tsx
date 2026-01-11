@@ -10,7 +10,7 @@ export default function ScannerDashboard() {
 
   const handleProcessOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orderInput.trim()) return;
+    if (!orderInput.trim() || isProcessing) return;
 
     setIsProcessing(true);
     setLastResult(null);

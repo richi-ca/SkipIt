@@ -1,12 +1,17 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { Order, orders as mockOrders } from '../data/mockData';
+import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
+import { Order } from '../data/mockData';
+import { orderService, CreateOrderRequest } from '../services/orderService';
+import { useAuth } from './AuthContext';
 
 interface OrderContextType {
   orders: Order[];
   activeQRs: { [orderId: string]: any[] };
-  addOrder: (newOrder: Order) => void;
-  claimItems: (orderId: string, itemsToClaim: { variationId: number; quantity: number }[]) => void;
-  claimFullOrder: (orderId: string) => void;
+  isLoading: boolean;
+  error: string | null;
+  createOrder: (eventId: number, items: { variationId: number; quantity: number }[]) => Promise<Order>;
+  claimItems: (orderId: string, itemsToClaim: { variationId: number; quantity: number }[]) => Promise<void>;
+  claimFullOrder: (orderId: string) => Promise<void>;
+  refreshOrders: () => Promise<void>;
   storeActiveQRs: (orderId: string, qrDataList: any[]) => void;
   markQrAsUsed: (qrId: string) => void;
 }
@@ -14,44 +19,83 @@ interface OrderContextType {
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const { isAuthenticated } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [activeQRs, setActiveQRs] = useState<{ [orderId: string]: any[] }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const addOrder = (newOrder: Order) => {
-    setOrders(prevOrders => [...prevOrders, newOrder]);
+  const refreshOrders = useCallback(async () => {
+    if (!isAuthenticated) {
+      setOrders([]);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const data = await orderService.getMyOrders();
+      setOrders(data);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+      setError("No se pudo cargar el historial de pedidos.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  // Load orders when user authenticates
+  useEffect(() => {
+    refreshOrders();
+  }, [refreshOrders]);
+
+  const createOrder = async (eventId: number, items: { variationId: number; quantity: number }[]): Promise<Order> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const request: CreateOrderRequest = {
+        eventId,
+        items
+      };
+      const newOrder = await orderService.createOrder(request);
+      setOrders(prev => [newOrder, ...prev]); // Add to top of list
+      return newOrder;
+    } catch (err: any) {
+      console.error("Failed to create order:", err);
+      setError(err.message || "Error al procesar el pedido.");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const claimItems = (orderId: string, itemsToClaim: { variationId: number; quantity: number }[]) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order => {
-        if (order.orderId === orderId) {
-          const newItems = order.items.map(item => {
-            const claim = itemsToClaim.find(c => c.variationId === item.variationId);
-            if (claim) {
-              return { ...item, claimed: (item.claimed || 0) + claim.quantity };
-            }
-            return item;
-          });
-          return { ...order, items: newItems };
-        }
-        return order;
-      })
-    );
+  const claimItems = async (orderId: string, itemsToClaim: { variationId: number; quantity: number }[]) => {
+    try {
+      // Call backend
+      const updatedOrder = await orderService.claimOrder(orderId, itemsToClaim);
+      
+      // Update local state
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.orderId === orderId ? updatedOrder : order
+        )
+      );
+    } catch (err: any) {
+      console.error("Failed to claim items:", err);
+      throw err;
+    }
   };
 
-  const claimFullOrder = (orderId: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order => {
-        if (order.orderId === orderId) {
-          return {
-            ...order,
-            status: 'FULLY_CLAIMED',
-            items: order.items.map(item => ({ ...item, claimed: item.quantity }))
-          };
-        }
-        return order;
-      })
-    );
+  const claimFullOrder = async (orderId: string) => {
+    const order = orders.find(o => o.orderId === orderId);
+    if (!order) return;
+
+    const itemsToClaim = order.items.map(item => ({
+      variationId: item.variationId,
+      quantity: item.quantity
+    }));
+
+    await claimItems(orderId, itemsToClaim);
   };
 
   const storeActiveQRs = (orderId: string, qrDataList: any[]) => {
@@ -72,7 +116,18 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <OrderContext.Provider value={{ orders, activeQRs, addOrder, claimItems, claimFullOrder, storeActiveQRs, markQrAsUsed }}>
+    <OrderContext.Provider value={{ 
+      orders, 
+      activeQRs, 
+      isLoading, 
+      error, 
+      createOrder, 
+      claimItems, 
+      claimFullOrder,
+      refreshOrders,
+      storeActiveQRs, 
+      markQrAsUsed 
+    }}>
       {children}
     </OrderContext.Provider>
   );
