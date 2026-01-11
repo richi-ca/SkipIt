@@ -125,11 +125,12 @@ Credenciales pre-configuradas para validar los distintos roles del sistema:
 
 | Rol | Usuario (Email) | Contraseña | Propósito |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin2` | `soyAdmin2@gmail.com` | Acceso total y futuro panel de administración. |
+| **Admin** | `soyAdmin2@gmail.com` | `admin2` | Acceso total y futuro panel de administración. |
 | **Scanner (Staff)** | `staff2@gmail.com` | `soyStaff2` | Acceso restringido al Dashboard de Canje. |
 | **Usuario** | (Registro libre) | (Tu contraseña) | Flujo de compra estándar. |
 
 ---
 
 ## 📄 Licencia
+Copyright (c) 2026 Ricardo Castillo Avalos.
 Este proyecto está bajo la licencia MIT.
