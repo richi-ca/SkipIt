@@ -35,7 +35,7 @@ import LoginPageHandler from './pages/LoginPageHandler';
 import ScannerDashboard from './pages/ScannerDashboard';
 import ScannerHistoryPage from './pages/ScannerHistoryPage';
 
-import { orderService } from './services/orderService';
+
 import { toast } from 'react-hot-toast';
 
 // --- Security Components ---
@@ -91,7 +91,7 @@ function AppContent() {
   // Context Hooks
   const { cartItems, clearCart } = useCart();
   const { user, isAuthenticated, setActionAfterLogin } = useAuth();
-  const { addOrder, claimFullOrder, storeActiveQRs } = useOrders();
+  const { createOrder, claimFullOrder, storeActiveQRs } = useOrders();
 
   // --- Global State (Age Verification) ---
   const [isAgeVerified, setIsAgeVerified] = useState(false);
@@ -231,16 +231,11 @@ function AppContent() {
     const targetEventId = cartEvent?.id || events[0].id; 
 
     try {
-      // 1. Crear orden en el backend
-      const createdOrder = await orderService.createOrder({
-        eventId: targetEventId,
-        items: itemsPayload
-      });
+      // 1. Crear orden en el backend usando el Contexto
+      const createdOrder = await createOrder(targetEventId, itemsPayload);
 
       // 2. Actualizar estado local
-      // Nota: addOrder del contexto podría ser redundante si OrderHistoryPage hace fetch, 
-      // pero sirve para el modal de éxito inmediato.
-      addOrder(createdOrder); 
+      // Nota: createOrder ya actualiza el estado orders en el contexto
       setSelectedOrder(createdOrder);
       
       // 3. Limpiar y cerrar
@@ -276,7 +271,7 @@ function AppContent() {
       total: selectedOrder.total,
       drinks: selectedOrder.items.map(item => `${item.productName} (${item.variationName}) x${item.quantity}`)
     };
-    claimFullOrder(selectedOrder.orderId);
+    // Removed claimFullOrder call here to prevent premature claiming
     storeActiveQRs(selectedOrder.orderId, [globalQrData]);
     setOrderData(globalQrData);
     setIsOrderTypeModalOpen(false);
