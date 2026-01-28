@@ -66,6 +66,37 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
 
   if (!isOpen) return null;
 
+  const handleQuickLogin = async (role: string) => {
+    let email = '';
+    let password = '';
+
+    switch (role) {
+      case 'cliente':
+        email = 'cliente@skipit.com';
+        password = 'password123';
+        break;
+      case 'admin':
+        email = 'admin@skipit.com';
+        password = 'adminpassword';
+        break;
+      case 'operador':
+        email = 'barra@skipit.com';
+        password = 'barrapassword';
+        break;
+    }
+
+    // Actualizar vista del form para feedback visual
+    reset({ email, password });
+
+    try {
+      const response = await authService.login({ email, password });
+      onLoginSuccess(response.user, response.token);
+      onClose();
+    } catch (error: any) {
+      setServerError(error.message || 'Error en login rápido');
+    }
+  };
+
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     setServerError('');
     try {
@@ -110,6 +141,31 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
         <div className="p-6 max-h-[605px] overflow-y-auto custom-scrollbar">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">¡Bienvenido de vuelta!</h2>
           <p className="text-gray-600 text-center mb-6">Inicia sesión para continuar disfrutando</p>
+
+          {/* Botones de Acceso Rápido (Dev/Demo) */}
+          <div className="grid grid-cols-3 gap-2 mb-6">
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('cliente')}
+              className="bg-blue-50 text-blue-700 py-2 px-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors border border-blue-200"
+            >
+              Cliente
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('admin')}
+              className="bg-red-50 text-red-700 py-2 px-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors border border-red-200"
+            >
+              Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('operador')}
+              className="bg-green-50 text-green-700 py-2 px-2 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors border border-green-200"
+            >
+              Oper
+            </button>
+          </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {serverError && (

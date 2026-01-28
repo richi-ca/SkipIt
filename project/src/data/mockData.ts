@@ -58,7 +58,7 @@ export const siteContent: SiteContent = {
   about: {
     mission: {
       text: "Transformar la experiencia de los eventos masivos, eliminando las largas filas en las cajas y barras mediante tecnología simple y eficiente.",
-      highlight: "cajas y barras" 
+      highlight: "cajas y barras"
     },
     vision: {
       text: "Ser la plataforma estándar para la compra de bebestibles en eventos de todo Chile, reconocida por su rapidez y confiabilidad."
@@ -133,10 +133,10 @@ export interface Event {
   endTime: string;          // Hora fin (HH:mm)
   location: string;
   image: string;
-  price: number;            // Precio numérico
+  // price removed
   rating: number;
   type: string;
-  
+
   // Configuración Admin
   isFeatured: boolean;      // Si aparece en el carrusel
   carouselOrder?: number;
@@ -152,12 +152,12 @@ export interface Promotion {
   title: string;
   description: string;
   discountText: string;     // Ej: "50% OFF"
-  
+
   // Visuals
-  styleVariant: PromotionStyle; 
-  iconName: 'Clock' | 'Users' | 'Gift'; 
+  styleVariant: PromotionStyle;
+  iconName: 'Clock' | 'Users' | 'Gift';
   imageUrl?: string;        // Opcional: Para subir logo de fiesta/marca (PDF requirement)
-  
+
   // Logic
   active: boolean;
   actionType?: ActionType;  // Qué hace el botón "Activar"
@@ -171,10 +171,10 @@ export interface Contest {
   description: string;
   prizeText: string;
   endDate: string;
-  
+
   // Visuals
   image?: string;           // Imagen de la copa o premio
-  
+
   // Logic
   active: boolean;
   actionType: ActionType;   // Qué hace el botón "Participar"
@@ -395,7 +395,7 @@ export const events: Event[] = [
     endTime: "06:00",
     location: "Parque O'Higgins, Santiago",
     image: "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg",
-    price: 15000,
+    // price removed
     rating: 4.8,
     type: "Festival",
     isFeatured: true,
@@ -411,7 +411,7 @@ export const events: Event[] = [
     endTime: "04:00",
     location: "Club The One, Las Condes",
     image: "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg",
-    price: 8000,
+    // price removed
     rating: 4.6,
     type: "Club",
     isFeatured: true,
@@ -427,7 +427,7 @@ export const events: Event[] = [
     endTime: "02:00",
     location: "Teatro Cariola, Santiago",
     image: "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg",
-    price: 12000,
+    // price removed
     rating: 4.9,
     type: "Concierto",
     isFeatured: true,
@@ -443,7 +443,7 @@ export const events: Event[] = [
     endTime: "01:00",
     location: "Playa Reñaca, Viña del Mar",
     image: "https://images.pexels.com/photos/1587927/pexels-photo-1587927.jpeg",
-    price: 10000,
+    // price removed
     rating: 4.7,
     type: "Playa",
     isFeatured: true,
@@ -458,7 +458,7 @@ export const promotions: Promotion[] = [
     title: "Happy Hour Digital",
     description: "2x1 en cervezas precompradas hasta las 11 PM",
     discountText: "50% OFF",
-    styleVariant: 'orange-red', 
+    styleVariant: 'orange-red',
     iconName: 'Clock',
     active: true,
     actionType: 'ADD_TO_CART', // Ejemplo: Debería añadir una cerveza

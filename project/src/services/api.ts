@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080/api';
+const BASE_URL = 'http://localhost:5000/api'; // Cambiado de 8080 a 5000 (Flask)
 
 interface FetchOptions extends RequestInit {
   params?: Record<string, string>;
@@ -6,7 +6,7 @@ interface FetchOptions extends RequestInit {
 
 export async function baseFetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { params, headers, ...rest } = options;
-  
+
   // Construct URL with query params
   let url = `${BASE_URL}${endpoint}`;
   if (params) {

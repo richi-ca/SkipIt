@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import Hero from '../components/Hero';
 import QuienesSomos from '../components/QuienesSomos';
 import EventCarousel from '../components/EventCarousel';
@@ -56,10 +56,13 @@ export default function HomePage({ onSelectEvent, onOpenRegister }: HomePageProp
               Eventos Destacados
             </h2>
             <p className="text-xl text-gray-600">
-              Encuentra tu evento favorito y precompra tus tragos
+              Encuentra tu evento favorito y precompra tus tragos{' '}
+              <Link to="/events" className="text-purple-600 hover:text-purple-800 font-medium hover:underline">
+                (buscar evento)
+              </Link>
             </p>
           </div>
-          
+
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>

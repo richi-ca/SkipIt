@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 import CustomDropdown from './CustomDropdown';
 import CustomCountrySelect from './CustomCountrySelect';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TextField } from '@mui/material';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { format, subYears } from 'date-fns';
@@ -87,7 +86,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     reset,
     watch,
     control,
-  } = useForm<IFormInput>({ 
+  } = useForm<IFormInput>({
     mode: 'onBlur',
     defaultValues: {
       firstName: '',
@@ -127,7 +126,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     setFormSuccess('');
     setServerError('');
-    
+
     try {
       const response = await authService.register({
         name: `${data.firstName} ${data.lastName}`,
@@ -139,7 +138,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
       });
 
       setFormSuccess('¡Registro exitoso! Iniciando sesión...');
-      
+
       setTimeout(() => {
         login(response.user, response.token);
         onClose();
@@ -153,7 +152,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[100]" role="dialog" aria-modal="true">
-      <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
+      <div className="bg-white rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl">
         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -168,7 +167,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           </div>
         </div>
 
-        <div className="p-6 max-h-[605px] overflow-y-auto scrollbar-width-none [&::-webkit-scrollbar]:hidden">
+        <div className="p-6 max-h-[90vh] overflow-y-auto scrollbar-width-none [&::-webkit-scrollbar]:hidden">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">¡Únete a SkipIT!</h2>
           <p className="text-gray-600 text-center mb-6">Crea tu cuenta y empieza a disfrutar sin filas</p>
 
@@ -203,36 +202,38 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               </div>
             </div>
 
-            <div>
-              <label htmlFor="email-register" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input id="email-register" type="email" autoComplete="email" {...register('email', { required: 'El email es obligatorio.', pattern: { value: /\S+@\S+\.\S+/, message: 'El formato del email no es válido.' } })} className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="tu@email.com" />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="email-register" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input id="email-register" type="email" autoComplete="email" {...register('email', { required: 'El email es obligatorio.', pattern: { value: /\S+@\S+\.\S+/, message: 'El formato del email no es válido.' } })} className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="tu@email.com" />
+                </div>
+                {errors.email && <p role="alert" className="text-sm text-red-600 mt-2">{errors.email.message}</p>}
               </div>
-              {errors.email && <p role="alert" className="text-sm text-red-600 mt-2">{errors.email.message}</p>}
-            </div>
 
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">Teléfono Celular</label>
-              <Controller
-                name="phone"
-                control={control}
-                rules={{ required: 'El teléfono es obligatorio.' }}
-                render={({ field, fieldState: { error } }) => (
-                  <PhoneInput
-                    {...field}
-                    id="phone"
-                    international
-                    defaultCountry="CL"
-                    countryCallingCodeEditable={false}
-                    countrySelectComponent={CustomCountrySelect}
-                    inputComponent={CustomPhoneInput}
-                    className={`flex items-center w-full bg-white border rounded-lg shadow-sm transition-all duration-200 ${error ? 'border-red-500' : 'border-gray-300 hover:border-gray-400'} focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-transparent`}
-                    placeholder="Ingresa tu número"
-                  />
-                )}
-              />
-              {errors.phone && <p role="alert" className="text-sm text-red-600 mt-2">{errors.phone.message}</p>}
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">Teléfono Celular</label>
+                <Controller
+                  name="phone"
+                  control={control}
+                  rules={{ required: 'El teléfono es obligatorio.' }}
+                  render={({ field, fieldState: { error } }) => (
+                    <PhoneInput
+                      {...field}
+                      id="phone"
+                      international
+                      defaultCountry="CL"
+                      countryCallingCodeEditable={false}
+                      countrySelectComponent={CustomCountrySelect}
+                      inputComponent={CustomPhoneInput}
+                      className={`flex items-center w-full bg-white border rounded-lg shadow-sm transition-all duration-200 ${error ? 'border-red-500' : 'border-gray-300 hover:border-gray-400'} focus-within:ring-2 focus-within:ring-purple-500 focus-within:border-transparent`}
+                      placeholder="Ingresa tu número"
+                    />
+                  )}
+                />
+                {errors.phone && <p role="alert" className="text-sm text-red-600 mt-2">{errors.phone.message}</p>}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -287,29 +288,31 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               </div>
             </div>
 
-            <div>
-              <label htmlFor="password-register" className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input id="password-register" type={showPassword ? 'text' : 'password'} autoComplete="new-password" {...register('password', { required: 'La contraseña es obligatoria.', minLength: { value: 8, message: 'Debe tener al menos 8 caracteres.' } })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Mínimo 8 caracteres" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="password-register" className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input id="password-register" type={showPassword ? 'text' : 'password'} autoComplete="new-password" {...register('password', { required: 'La contraseña es obligatoria.', minLength: { value: 8, message: 'Debe tener al menos 8 caracteres.' } })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Mínimo 8 caracteres" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.password && <p role="alert" className="text-sm text-red-600 mt-2">{errors.password.message}</p>}
+                <PasswordStrengthMeter password={passwordValue} />
               </div>
-              {errors.password && <p role="alert" className="text-sm text-red-600 mt-2">{errors.password.message}</p>}
-              <PasswordStrengthMeter password={passwordValue} />
-            </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" {...register('confirmPassword', { required: 'Confirma tu contraseña.', validate: (value) => value === passwordValue || 'Las contraseñas no coinciden.' })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Repite tu contraseña" />
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" {...register('confirmPassword', { required: 'Confirma tu contraseña.', validate: (value) => value === passwordValue || 'Las contraseñas no coinciden.' })} className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition-all ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'}`} placeholder="Repite tu contraseña" />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p role="alert" className="text-sm text-red-600 mt-2">{errors.confirmPassword.message}</p>}
               </div>
-              {errors.confirmPassword && <p role="alert" className="text-sm text-red-600 mt-2">{errors.confirmPassword.message}</p>}
             </div>
 
             <div className="flex items-start space-x-3">

@@ -34,6 +34,11 @@ import ProfilePage from './pages/ProfilePage';
 import LoginPageHandler from './pages/LoginPageHandler';
 import ScannerDashboard from './pages/ScannerDashboard';
 import ScannerHistoryPage from './pages/ScannerHistoryPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import EventsMaintainer from './pages/admin/maintainers/EventsMaintainer';
+import ProductsMaintainer from './pages/admin/maintainers/ProductsMaintainer';
+import CategoriesMaintainer from './pages/admin/maintainers/CategoriesMaintainer';
+import CMSPage from './pages/admin/cms/CMSPage';
 
 
 import { toast } from 'react-hot-toast';
@@ -46,10 +51,10 @@ function SecurityGuard() {
 
   useEffect(() => {
     if (user?.role === 'scanner') {
-       // Force scanner role to stay in /scanner
-       if (!location.pathname.startsWith('/scanner')) {
-          navigate('/scanner', { replace: true });
-       }
+      // Force scanner role to stay in /scanner
+      if (!location.pathname.startsWith('/scanner')) {
+        navigate('/scanner', { replace: true });
+      }
     }
   }, [user, location, navigate]);
 
@@ -96,7 +101,7 @@ function AppContent() {
   // --- Global State (Age Verification) ---
   const [isAgeVerified, setIsAgeVerified] = useState(false);
   const [showUnderageBlock, setShowUnderageBlock] = useState(false);
-  
+
   // Estados de Modales Globales (Restaurados para control desde App)
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -104,8 +109,8 @@ function AppContent() {
   // --- Event & Cart Logic (Shared between layouts potentially, but mostly Public) ---
   // Nota: Idealmente esto debería moverse a un EventContext o similar para limpiar App.tsx,
   // pero por ahora lo mantenemos aquí para no romper la lógica de "DrinkMenu" que se abre sobre todo.
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null); 
-  const [cartEvent, setCartEvent] = useState<Event | null>(null);         
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [cartEvent, setCartEvent] = useState<Event | null>(null);
   const [pendingEventSelection, setPendingEventSelection] = useState<Event | null>(null);
   const [isCartConflictModalOpen, setIsCartConflictModalOpen] = useState(false);
 
@@ -195,7 +200,7 @@ function AppContent() {
   // We need to expose a "handleCheckout" function to the Context or pass it down?
   // Simpler approach: PublicLayout manages UI, but logic stays here? No, let's migrate.
   // TEMPORARY FIX: Payment logic remains in App because Cart calls it.
-  
+
   // ... (Existing Payment Logic Logic omitted for brevity, keeping as is mostly) ...
   const openPaymentModal = () => {
     const total = calculateTotal();
@@ -206,17 +211,17 @@ function AppContent() {
 
 
 
-// ... (imports anteriores)
+  // ... (imports anteriores)
 
-// Dentro de AppContent:
+  // Dentro de AppContent:
 
   const handlePaymentSuccess = async () => {
     if (!user) return;
-    
+
     // Si no hay evento asociado al carrito (caso raro), usar fallback o error
     if (!cartEvent && (!cartItems || Object.keys(cartItems).length === 0)) {
-        toast.error("El carrito está vacío o no tiene evento asociado.");
-        return;
+      toast.error("El carrito está vacío o no tiene evento asociado.");
+      return;
     }
 
     // Preparar payload para el backend
@@ -228,7 +233,7 @@ function AppContent() {
 
     // Si por alguna razón cartEvent es null pero hay items (lógica legacy), intentamos recuperar el evento de mockData o fallamos
     // Para esta etapa de integración, asumiremos que cartEvent está setead correctamente por la lógica de "Un Carrito = Un Evento"
-    const targetEventId = cartEvent?.id || events[0].id; 
+    const targetEventId = cartEvent?.id || events[0].id;
 
     try {
       // 1. Crear orden en el backend usando el Contexto
@@ -237,7 +242,7 @@ function AppContent() {
       // 2. Actualizar estado local
       // Nota: createOrder ya actualiza el estado orders en el contexto
       setSelectedOrder(createdOrder);
-      
+
       // 3. Limpiar y cerrar
       clearCart();
       setCartEvent(null);
@@ -307,10 +312,10 @@ function AppContent() {
             {/* === RUTAS PÚBLICAS (Cliente) === */}
             <Route element={
               <ClientGuard>
-                <PublicLayout 
-                  isCartOpen={isCartOpen} 
-                  onOpenCart={() => setIsCartOpen(true)} 
-                  onCloseCart={() => setIsCartOpen(false)} 
+                <PublicLayout
+                  isCartOpen={isCartOpen}
+                  onOpenCart={() => setIsCartOpen(true)}
+                  onCloseCart={() => setIsCartOpen(false)}
                   onCheckout={handleCheckout}
                   isLoginOpen={isLoginOpen}
                   setIsLoginOpen={setIsLoginOpen}
@@ -319,30 +324,31 @@ function AppContent() {
                 />
               </ClientGuard>
             }>
-              <Route 
-                path="/" 
+              <Route
+                path="/"
                 element={
-                  <HomePage 
-                    onSelectEvent={handleEventSelection} 
-                    onOpenRegister={() => {}} // Register is now managed by PublicLayout
+                  <HomePage
+                    onSelectEvent={handleEventSelection}
+                    onOpenRegister={() => { }} // Register is now managed by PublicLayout
                   />
-                } 
+                }
               />
               <Route path="/events" element={<EventsPage onSelectEvent={handleEventSelection} />} />
               <Route path="/history" element={<OrderHistoryPage onManageOrder={(order) => { setSelectedOrder(order); setIsManageOrderModalOpen(true); }} />} />
               <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/login" element={<LoginPageHandler onOpenLogin={() => {}} />} />
+              <Route path="/login" element={<LoginPageHandler onOpenLogin={() => { }} />} />
             </Route>
 
             {/* === RUTAS PRIVADAS (Admin) === */}
             <Route path="/admin" element={<AdminRoute />}>
               <Route element={<AdminLayout />}>
-                <Route index element={<div className="p-10 text-2xl text-gray-600">Panel de Dashboard (Próximamente)</div>} />
-                <Route path="events" element={<div className="p-10 text-2xl text-gray-600">Gestión de Eventos</div>} />
-                <Route path="products" element={<div className="p-10 text-2xl text-gray-600">Gestión de Productos</div>} />
+                <Route index element={<AdminDashboard />} />
+                <Route path="events" element={<EventsMaintainer />} />
+                <Route path="categories" element={<CategoriesMaintainer />} />
+                <Route path="products" element={<ProductsMaintainer />} />
                 <Route path="sales" element={<div className="p-10 text-2xl text-gray-600">Ventas & Scanner</div>} />
                 <Route path="marketing" element={<div className="p-10 text-2xl text-gray-600">Marketing</div>} />
-                <Route path="cms" element={<div className="p-10 text-2xl text-gray-600">CMS Contenidos</div>} />
+                <Route path="cms" element={<CMSPage />} />
               </Route>
             </Route>
 
@@ -356,7 +362,7 @@ function AppContent() {
           {/* --- Global Modals that sit on top of EVERYTHING (incl. Admin) --- */}
           {/* NOTE: Payment logic is currently coupled to App state. Needs refactoring to Context or custom Hook to move fully to PublicLayout. */}
           {/* For now, we render them here to keep functionality working. */}
-          
+
           <ConfirmationModal
             isOpen={isCartConflictModalOpen}
             onClose={cancelChangeCartEvent}
@@ -383,8 +389,8 @@ function AppContent() {
             }}
           />
 
-           {/* Order & QR Modals */}
-           <OrderTypeSelectionModal
+          {/* Order & QR Modals */}
+          <OrderTypeSelectionModal
             isOpen={isOrderTypeModalOpen}
             onClose={() => setIsOrderTypeModalOpen(false)}
             onSelectSingleQR={handleOpenSingleQR}
@@ -404,7 +410,7 @@ function AppContent() {
             onClose={() => setIsMultiQrModalOpen(false)}
             qrDataList={multiQrData}
           />
-          
+
           {isQROpen && orderData && (
             <QRCode
               isOpen={isQROpen}

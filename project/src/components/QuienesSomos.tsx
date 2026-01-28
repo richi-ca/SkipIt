@@ -26,8 +26,25 @@ const renderWithHighlight = (text: string, highlight: string) => {
   );
 };
 
+// Imports adicionales necesarios
+import { useState, useEffect } from 'react';
+import { baseFetch } from '../services/api';
+
+// ... (El resto de imports sigue igual: Link, iconos, imagenes)
+
+// Props
+interface QuienesSomosProps {
+  onOpenRegister: () => void;
+}
+
 export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
-  const { about } = siteContent;
+  // Estado para contenidos CMS (con defaults por si falla la carga o mientras carga)
+  const [cmsContent, setCmsContent] = useState({
+    quienes_somos: '<p>Somos SkipIT, la plataforma que revoluciona la forma de disfrutar eventos. Creamos la solución perfecta para que pases más tiempo bailando y menos tiempo haciendo fila.</p>',
+    mision: '<p>Nuestra misión es eliminar las filas y maximizar la diversión, ofreciendo una experiencia fluida y rápida.</p>',
+    vision: '<p>Ser la plataforma líder global en gestión de experiencia en eventos, reconocida por nuestra innovación y servicio.</p>'
+  });
+  const { about } = siteContent; // Aún usamos mockData para iconos y estructura general, pero texto vendrá de CMS.
 
   const iconMap = [Smartphone, Trophy, Zap];
   const gradientMap = [
@@ -36,18 +53,34 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
     'from-pink-600 to-orange-500'
   ];
 
+  // Efecto para cargar contenido CMS
+  useEffect(() => {
+    const loadCms = async () => {
+      try {
+        const data = await baseFetch<any>('/cms/');
+        if (data) {
+          // Merge con defaults para evitar vacíos si algo falta
+          setCmsContent(prev => ({ ...prev, ...data }));
+        }
+      } catch (error) {
+        console.error("Error cargando CMS en Quienes Somos", error);
+      }
+    };
+    loadCms();
+  }, []);
+
   return (
     <section id="quienes-somos" className="py-20 bg-gradient-to-br from-purple-50 to-pink-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Header - Quienes Somos */}
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
             ¿Quiénes Somos?
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Somos SkipIT, la plataforma que revoluciona la forma de disfrutar eventos.
-            Creamos la solución perfecta para que pases más tiempo bailando y menos tiempo haciendo fila.
-          </p>
+          <div
+            className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed prose prose-purple"
+            dangerouslySetInnerHTML={{ __html: cmsContent.quienes_somos }}
+          />
         </div>
 
         {/* Mission */}
@@ -57,9 +90,10 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
               <h3 className="text-3xl font-bold text-gray-900 mb-6">
                 Nuestra Misión
               </h3>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                {renderWithHighlight(about.mission.text, about.mission.highlight)}
-              </p>
+              <div
+                className="text-lg text-gray-600 mb-6 leading-relaxed prose prose-purple"
+                dangerouslySetInnerHTML={{ __html: cmsContent.mision }}
+              />
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
                   <Heart className="w-6 h-6 text-white" />
@@ -95,9 +129,10 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
               <h3 className="text-3xl font-bold text-gray-900 mb-6">
                 Nuestra Visión
               </h3>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                {about.vision.text}
-              </p>
+              <div
+                className="text-lg text-gray-600 mb-6 leading-relaxed prose prose-purple"
+                dangerouslySetInnerHTML={{ __html: cmsContent.vision }}
+              />
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
                   <Heart className="w-6 h-6 text-white" />
@@ -119,7 +154,7 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
             {about.steps.map((step, index) => {
               const Icon = iconMap[index] || Zap;
               const gradient = gradientMap[index] || gradientMap[0];
-              
+
               return (
                 <div key={step.stepNumber} className="text-center">
                   <div className={`w-20 h-20 bg-gradient-to-r ${gradient} rounded-full flex items-center justify-center mx-auto mb-6`}>

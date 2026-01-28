@@ -24,12 +24,12 @@ export default function EventCard({ event, onSelect }: EventCardProps) {
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col">
       <div className="relative h-48 overflow-hidden shrink-0">
-        <img 
-          src={event.image} 
+        <img
+          src={event.image}
           alt={event.name}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
         />
-        
+
         {/* Type Badge (Top Left) */}
         <div className="absolute top-4 left-4 z-10">
           <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-md">
@@ -37,12 +37,9 @@ export default function EventCard({ event, onSelect }: EventCardProps) {
           </span>
         </div>
 
-        {/* Price Badge (Top Right) */}
-        <div className="absolute top-4 right-4 z-10">
-           <span className="bg-white bg-opacity-90 text-gray-900 font-bold px-3 py-1 rounded-full text-sm shadow-md">
-            ${event.price.toLocaleString()}
-          </span>
-        </div>
+        {/* Price Badge Removed */}
+
+        {/* Overlay Title (Requirement: Fuchsia background adapting to text) */}
 
         {/* Overlay Title (Requirement: Fuchsia background adapting to text) */}
         {event.overlayTitle && (
@@ -57,7 +54,7 @@ export default function EventCard({ event, onSelect }: EventCardProps) {
       <div className="p-6 flex flex-col flex-grow">
         {/* Fallback title if no overlay, or secondary info */}
         <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{event.name}</h3>
-        
+
         <div className="space-y-2 mb-6 flex-grow">
           <div className="flex items-center text-gray-600">
             <Calendar className="w-4 h-4 mr-2 shrink-0" />

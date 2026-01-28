@@ -43,17 +43,14 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events, onSelectEvent }) 
   // 1. Debe estar marcado como 'isFeatured'.
   // 2. No debe ser un evento pasado (comparación de strings ISO funciona perfectamente: '2025-12-15' >= '2025-11-26').
   // 3. Ordenar por 'carouselOrder'.
-  
-  const todayISO = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+  // Obtener fecha local en formato YYYY-MM-DD para comparar con isoDate del evento
+  const today = new Date();
+  const todayISO = new Date(today.getTime() - (today.getTimezoneOffset() * 60000))
+    .toISOString()
+    .split('T')[0];
 
   const featuredEvents = events
-    .filter(event => {
-      // Si no tiene isoDate, asumimos que es válido para no ocultarlo por error, o lo ocultamos (decisión de negocio).
-      // Aquí asumimos que si falta isoDate, se muestra si es featured.
-      if (!event.isoDate) return event.isFeatured;
-      
-      return event.isFeatured && event.isoDate >= todayISO;
-    })
     .sort((a, b) => (a.carouselOrder || 99) - (b.carouselOrder || 99));
 
   const slidesToShow = screenWidth < 1024 ? 1 : 2;
@@ -71,7 +68,7 @@ const EventCarousel: React.FC<EventCarouselProps> = ({ events, onSelectEvent }) 
   };
 
   if (featuredEvents.length === 0) {
-    return <p className="text-center text-white">No hay eventos destacados próximos.</p>;
+    return <p className="text-center text-gray-500 py-8">No hay eventos destacados disponibles en este momento.</p>;
   }
 
   return (
