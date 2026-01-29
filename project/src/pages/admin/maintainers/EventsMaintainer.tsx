@@ -2,6 +2,7 @@ import GenericMaintainer from './GenericMaintainer';
 import React, { useState, useEffect } from 'react';
 import ImageSelectorModal from '../../../components/admin/ImageSelectorModal';
 import { Loader, Upload, Plus, ImageOff } from 'lucide-react';
+import SecureImage from '../../../components/SecureImage';
 import $ from 'jquery';
 
 // Componente separado para el formulario
@@ -17,7 +18,7 @@ const EventForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: Reac
     }, [imageUrl]);
 
     // Constante alineada con la nueva ruta de media
-    const MEDIA_BASE = 'http://localhost:5000/media/';
+    const MEDIA_BASE = `${import.meta.env.VITE_MEDIA_URL}/events/`;
 
     const getPreviewUrl = (val?: string) => {
         if (!val) return null;
@@ -111,7 +112,7 @@ const EventForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: Reac
                         <div className="flex gap-4 items-start">
                             <div className="w-full h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative group">
                                 {imageUrl && !imgError ? (
-                                    <img
+                                    <SecureImage
                                         src={getPreviewUrl(imageUrl) || ''}
                                         alt="Preview"
                                         className="w-full h-full object-cover"
@@ -147,6 +148,7 @@ const EventForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: Reac
                         currentValue={imageUrl}
                         onSelect={(val) => setImageUrl(val)}
                         onClose={() => setShowImageSelector(false)}
+                        folder="events"
                     />
                 )}
             </form>
@@ -160,6 +162,7 @@ export default function EventsMaintainer() {
             title="Mantenedor de Eventos"
             itemTitle="Evento"
             endpoint="/catalog/events"
+            showDateFilter={true}
             columns={[
                 { key: 'id', label: 'ID' },
                 { key: 'name', label: 'Nombre' },
@@ -189,7 +192,7 @@ export default function EventsMaintainer() {
             }}
             tableOptions={{
                 order: [[3, 'asc']], // Order by 'iso_date'
-                drawCallback: function (settings: any) {
+                drawCallback: function (this: any, _settings: any) {
                     const api = this.api();
                     const rows = api.rows({ page: 'current' }).nodes();
                     const groupColumnIndex = 2; // 'month_year_sort'

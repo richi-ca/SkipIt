@@ -25,10 +25,18 @@ def get_media(filename):
 
 @media_bp.route('/', methods=['GET'])
 def list_media():
-    """Listar archivos para la galería"""
+    """Listar archivos para la galería, opcionalmente filtrando por carpeta"""
+    folder = request.args.get('folder', '').strip('/')
+    
+    # Seguridad básica para evitar salir del directorio media
+    if '..' in folder or folder.startswith('/'):
+        return jsonify({'error': 'Invalid folder path'}), 400
+
+    target_folder = os.path.join(MEDIA_FOLDER, folder)
+    
     files = []
-    if os.path.exists(MEDIA_FOLDER):
-        for f in os.listdir(MEDIA_FOLDER):
+    if os.path.exists(target_folder):
+        for f in os.listdir(target_folder):
             if allowed_file(f):
                 files.append(f)
     return jsonify(files)
@@ -45,16 +53,25 @@ def upload_file():
         original_filename = secure_filename(file.filename)
         name, ext = os.path.splitext(original_filename)
         
+        # Obtener carpeta destino
+        folder = request.form.get('folder', '').strip('/')
+        if '..' in folder or folder.startswith('/'):
+            return jsonify({'error': 'Invalid folder path'}), 400
+
+        target_folder = os.path.join(MEDIA_FOLDER, folder)
+        if not os.path.exists(target_folder):
+            os.makedirs(target_folder)
+
         # Generar nombre único: nombre-uuid.ext
         unique_id = str(uuid.uuid4())
         new_filename = f"{name}-{unique_id}{ext}"
         
-        file.save(os.path.join(MEDIA_FOLDER, new_filename))
+        file.save(os.path.join(target_folder, new_filename))
         
         # URL completa
-        # request.host_url da http://localhost:5000/
-        # url_for('media.get_media', filename=new_filename) da /media/filename
-        full_url = f"{request.host_url.rstrip('/')}/media/{new_filename}"
+        # Construir la URL incluyendo la carpeta
+        folder_path = f"{folder}/" if folder else ""
+        full_url = f"{request.host_url.rstrip('/')}/media/{folder_path}{new_filename}"
         
         return jsonify({
             'message': 'File uploaded successfully',

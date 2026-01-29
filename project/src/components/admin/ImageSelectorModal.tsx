@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Check, Maximize2, Minimize2, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import SecureImage from '../SecureImage';
 
 interface ImageSelectorProps {
     currentValue: string;
     onSelect: (value: string) => void;
     onClose: () => void;
+    folder?: string;
 }
 
-export default function ImageSelectorModal({ currentValue, onSelect, onClose }: ImageSelectorProps) {
+export default function ImageSelectorModal({ currentValue, onSelect, onClose, folder = '' }: ImageSelectorProps) {
     const [images, setImages] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -19,10 +21,10 @@ export default function ImageSelectorModal({ currentValue, onSelect, onClose }: 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    const API_BASE = 'http://localhost:5000';
-    const LIST_ENDPOINT = `${API_BASE}/media/`;
-    const UPLOAD_ENDPOINT = `${API_BASE}/media/upload`;
-    const MEDIA_BASE = `${API_BASE}/media/`;
+    const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_URL;
+    const LIST_ENDPOINT = `${MEDIA_BASE_URL}/?folder=${folder}`;
+    const UPLOAD_ENDPOINT = `${MEDIA_BASE_URL}/upload`;
+    const MEDIA_BASE = `${MEDIA_BASE_URL}/${folder ? folder + '/' : ''}`;
 
     useEffect(() => {
         fetchImages();
@@ -39,7 +41,8 @@ export default function ImageSelectorModal({ currentValue, onSelect, onClose }: 
             const token = localStorage.getItem('token');
             const res = await fetch(LIST_ENDPOINT, {
                 headers: {
-                    'Authorization': token ? `Bearer ${token}` : ''
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
             if (!res.ok) throw new Error("Error fetching images");
@@ -72,6 +75,7 @@ export default function ImageSelectorModal({ currentValue, onSelect, onClose }: 
 
         const formData = new FormData();
         formData.append('file', file);
+        if (folder) formData.append('folder', folder);
 
         setIsUploading(true);
         try {
@@ -79,7 +83,8 @@ export default function ImageSelectorModal({ currentValue, onSelect, onClose }: 
             const res = await fetch(UPLOAD_ENDPOINT, {
                 method: 'POST',
                 headers: {
-                    'Authorization': token ? `Bearer ${token}` : ''
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'ngrok-skip-browser-warning': 'true'
                 },
                 body: formData
             });
@@ -190,7 +195,7 @@ export default function ImageSelectorModal({ currentValue, onSelect, onClose }: 
                                     className={`group relative aspect-square rounded-lg overflow-hidden border-4 cursor-pointer transition hover:border-purple-400 hover:shadow-lg bg-white ${currentValue === img ? 'border-purple-600' : 'border-transparent'}`}
                                 >
                                     <div className="w-full h-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                                        <img
+                                        <SecureImage
                                             src={`${MEDIA_BASE}${img}`}
                                             alt={img}
                                             className="w-full h-full object-cover transition duration-300 group-hover:scale-110"

@@ -96,7 +96,7 @@ function AppContent() {
   // Context Hooks
   const { cartItems, clearCart } = useCart();
   const { user, isAuthenticated, setActionAfterLogin } = useAuth();
-  const { createOrder, claimFullOrder, storeActiveQRs } = useOrders();
+  const { createOrder, storeActiveQRs } = useOrders();
 
   // --- Global State (Age Verification) ---
   const [isAgeVerified, setIsAgeVerified] = useState(false);

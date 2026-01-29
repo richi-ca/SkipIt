@@ -14,6 +14,7 @@ def get_events():
     # Public check
     if request.args.get('public', '').lower() == 'true':
         query = query.filter(
+            Event.is_active == True,
             or_(Event.valid_from == None, Event.valid_from <= today),
             or_(Event.valid_until == None, Event.valid_until >= today)
         )

@@ -11,11 +11,11 @@ export default function CategoriesMaintainer() {
             columns={[
                 { key: 'id', label: 'ID' },
                 { key: 'name', label: 'Nombre' },
-                { key: 'display_order', label: 'Orden' }
+                { key: 'description', label: 'Descripción' }
             ]}
             fields={[
                 { key: 'name', label: 'Nombre de la Categoría', type: 'text', required: true },
-                { key: 'display_order', label: 'Orden de Visualización', type: 'number', required: false }
+                { key: 'description', label: 'Descripción', type: 'textarea', required: true }
             ]}
         />
     );

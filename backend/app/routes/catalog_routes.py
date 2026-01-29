@@ -99,7 +99,8 @@ def create_product():
         category_id=data['category_id'],
         name=data['name'],
         description=data.get('description'),
-        image_url=data.get('image_url')
+        image_url=data.get('image_url'),
+        price=data.get('price')
     )
     db.session.add(new_product)
     db.session.commit()
@@ -119,6 +120,7 @@ def update_product(id):
     if 'category_id' in data: product.category_id = data['category_id']
     if 'description' in data: product.description = data['description']
     if 'image_url' in data: product.image_url = data['image_url']
+    if 'price' in data: product.price = data['price']
     
     try:
         db.session.commit()

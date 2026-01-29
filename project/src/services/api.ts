@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5000/api'; // Cambiado de 8080 a 5000 (Flask)
+const BASE_URL = `${import.meta.env.VITE_API_URL}`;
 
 interface FetchOptions extends RequestInit {
   params?: Record<string, string>;
@@ -21,6 +21,7 @@ export async function baseFetch<T>(endpoint: string, options: FetchOptions = {})
     ...rest,
     headers: {
       'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...headers,
     },

@@ -72,7 +72,7 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # menu_id relationship removed
     name = db.Column(db.String, nullable=False)
-    display_order = db.Column(db.Integer, nullable=True)
+    description = db.Column(db.Text, nullable=True)
 
     # Relationships
     products = db.relationship('Product', backref='category', cascade='all, delete-orphan')
@@ -81,7 +81,7 @@ class Category(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'display_order': self.display_order,
+            'description': self.description,
             'products': [p.to_dict() for p in self.products]
         }
 
@@ -93,6 +93,7 @@ class Product(db.Model):
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.Text, nullable=True)
     image_url = db.Column(db.String, nullable=True)
+    price = db.Column(db.Numeric(10, 2), nullable=True)
 
     # Relationships
     variations = db.relationship('ProductVariation', backref='product', cascade='all, delete-orphan')
@@ -104,6 +105,7 @@ class Product(db.Model):
             'name': self.name,
             'description': self.description,
             'image_url': self.image_url,
+            'price': float(self.price) if self.price else 0.0,
             'variations': [v.to_dict() for v in self.variations]
         }
 

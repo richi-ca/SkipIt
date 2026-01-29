@@ -25,12 +25,12 @@ export const catalogService = {
   }
 };
 
-const MEDIA_BASE_URL = 'http://localhost:5000/media/';
+const MEDIA_BASE_URL = `${import.meta.env.VITE_MEDIA_URL}/`;
 
 const mapEventFromApi = (e: any): Event => {
   let imageUrl = e.image_url;
   if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
-    imageUrl = `${MEDIA_BASE_URL}${imageUrl}`;
+    imageUrl = `${MEDIA_BASE_URL}events/${imageUrl}`;
   }
 
   return {

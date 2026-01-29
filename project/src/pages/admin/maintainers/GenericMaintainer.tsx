@@ -16,7 +16,8 @@ export default function GenericMaintainer({
     fields,
     processData,
     tableOptions,
-    renderForm
+    renderForm,
+    showDateFilter
 }: {
     title: string,
     itemTitle?: string,
@@ -25,7 +26,8 @@ export default function GenericMaintainer({
     fields: { key: string, label: string, type: string, required?: boolean, options?: { value: any, label: string }[] }[],
     processData?: (data: any[]) => any[],
     tableOptions?: any,
-    renderForm?: (props: { item: any, onSubmit: (e: React.FormEvent<HTMLFormElement>) => void, onCancel: () => void }) => React.ReactNode
+    renderForm?: (props: { item: any, onSubmit: (e: React.FormEvent<HTMLFormElement>) => void, onCancel: () => void }) => React.ReactNode,
+    showDateFilter?: boolean
 }) {
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -66,12 +68,12 @@ export default function GenericMaintainer({
     // Calcular data filtrada
     const filteredItems = React.useMemo(() => items.filter(item => {
         let matchesDate = true;
-        if ('iso_date' in item) {
+        if (showDateFilter && 'iso_date' in item) {
             const iso = (item as any).iso_date;
             matchesDate = iso >= dateStart && iso <= dateEnd;
         }
         return matchesDate;
-    }), [items, dateStart, dateEnd]);
+    }), [items, dateStart, dateEnd, showDateFilter]);
 
     // Inicializar / Actualizar DataTables
     useEffect(() => {
@@ -276,24 +278,26 @@ export default function GenericMaintainer({
             </div>
 
             {/* Filtros */}
-            <div className="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-wrap gap-4 items-center">
-                <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-800 font-medium">Ver eventos válidos desde</span>
-                    <input
-                        type="date"
-                        className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                        value={dateStart}
-                        onChange={(e) => setDateStart(e.target.value)}
-                    />
-                    <span className="text-sm text-gray-500 font-medium ml-2">Hasta:</span>
-                    <input
-                        type="date"
-                        className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                        value={dateEnd}
-                        onChange={(e) => setDateEnd(e.target.value)}
-                    />
+            {showDateFilter && (
+                <div className="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-wrap gap-4 items-center">
+                    <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-800 font-medium">Ver eventos válidos desde</span>
+                        <input
+                            type="date"
+                            className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                            value={dateStart}
+                            onChange={(e) => setDateStart(e.target.value)}
+                        />
+                        <span className="text-sm text-gray-500 font-medium ml-2">Hasta:</span>
+                        <input
+                            type="date"
+                            className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                            value={dateEnd}
+                            onChange={(e) => setDateEnd(e.target.value)}
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Tabla DataTables */}
             <div className="bg-white rounded-xl shadow p-4 overflow-hidden relative min-h-[400px]">

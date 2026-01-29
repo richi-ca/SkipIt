@@ -114,6 +114,7 @@ export interface Product {
 export interface Category {
   id: number;
   name: string;             // Ej: "Cervezas", "Tragos"
+  description?: string;     // Nueva descripción
   products: Product[];
 }
 
@@ -272,7 +273,8 @@ const generalMenu: Menu = {
   categories: [
     {
       id: 1,
-      name: "Cervezas",
+      name: "Cervezas (Brewed Beverages)",
+      description: "Incluye todo lo derivado de la fermentación de cereales. Desde las Lager industriales hasta las Artesanales (IPA, Stout, Porter) y versiones sin alcohol.",
       products: [
         {
           id: 1,
@@ -299,7 +301,28 @@ const generalMenu: Menu = {
     },
     {
       id: 2,
-      name: "Tragos",
+      name: "Destilados Puros (Spirits / Neat)",
+      description: "Bebidas de alta graduación servidas solas o \"on the rocks\". Aquí entran el Pisco, Whisky, Tequila, Vodka, Ron y Gin sin mezcla adicional.",
+      products: [
+        {
+          id: 8,
+          name: "Tequila Shot",
+          description: "Tequila premium con sal y limón",
+          image: "https://images.pexels.com/photos/5947088/pexels-photo-5947088.jpeg",
+          variations: [{ id: 108, name: "Caballito", price: 3500 }]
+        }
+      ]
+    },
+    {
+      id: 3,
+      name: "Combinados Clásicos (Mixers / Highballs)",
+      description: "La base de los eventos masivos. Mezcla directa de un destilado con una bebida carbonatada o jugo. Ejemplos: Piscola, Gin Tonic, Cuba Libre o Fernet con Coca.",
+      products: []
+    },
+    {
+      id: 4,
+      name: "Coctelería de Autor & Mixología",
+      description: "Tragos complejos que requieren técnica (shaker, refrescado) y ingredientes específicos (bitters, jarabes, botánicos). Aquí clasificarías tus Margaritas, Mojitos, Negronis y creaciones exclusivas del evento.",
       products: [
         {
           id: 4,
@@ -332,16 +355,22 @@ const generalMenu: Menu = {
       ]
     },
     {
-      id: 3,
-      name: "Shots",
+      id: 5,
+      name: "Vinos y Derivados (Viticultura)",
+      description: "Abarca Vino Tinto, Blanco, Rosado y preparados típicos chilenos como el Terremoto o la Sangría.",
+      products: []
+    },
+    {
+      id: 6,
+      name: "Espumantes y Sidras",
+      description: "Categoría para celebraciones y sectores VIP. Incluye Champagne, Prosecco, Cava y Sidras de manzana o pera.",
+      products: []
+    },
+    {
+      id: 7,
+      name: "Licores y Digestivos",
+      description: "Bebidas dulces o herbales de menor graduación que suelen servirse al final o como base de otros tragos. Ejemplos: Manzanilla, Amaretto, Baileys o Limoncello.",
       products: [
-        {
-          id: 8,
-          name: "Tequila Shot",
-          description: "Tequila premium con sal y limón",
-          image: "https://images.pexels.com/photos/5947088/pexels-photo-5947088.jpeg",
-          variations: [{ id: 108, name: "Caballito", price: 3500 }]
-        },
         {
           id: 9,
           name: "Jägermeister",
@@ -359,8 +388,29 @@ const generalMenu: Menu = {
       ]
     },
     {
-      id: 4,
-      name: "Sin Alcohol",
+      id: 8,
+      name: "Bebidas Analcohólicas (Soft Drinks)",
+      description: "Todo lo que no contiene alcohol: Gaseosas (bebidas), Aguas minerales, Jugos de fruta y Bebidas Isotónicas.",
+      products: [
+        {
+          id: 12,
+          name: "Jugo Natural",
+          description: "Jugos frescos de frutas de temporada",
+          image: "https://images.pexels.com/photos/5947091/pexels-photo-5947091.jpeg",
+          variations: [{ id: 112, name: "Vaso", price: 2500 }]
+        }
+      ]
+    },
+    {
+      id: 9,
+      name: "Bebidas Energéticas",
+      description: "Aunque son analcohólicas, en eventos masivos se manejan aparte por su alto costo y uso frecuente para \"bombas\" o mezclas con Vodka y Jägermeister.",
+      products: []
+    },
+    {
+      id: 10,
+      name: "Mocktails (Coctelería 0%)",
+      description: "Esta categoría es técnica: son tragos que imitan la complejidad de un cóctel (presentación, mezcla de sabores) pero con 0% alcohol, como un Mojito Virgin.",
       products: [
         {
           id: 11,
@@ -368,13 +418,6 @@ const generalMenu: Menu = {
           description: "Menta fresca, limón y soda sin alcohol",
           image: "https://images.pexels.com/photos/5947091/pexels-photo-5947091.jpeg",
           variations: [{ id: 111, name: "Vaso", price: 3000 }]
-        },
-        {
-          id: 12,
-          name: "Jugo Natural",
-          description: "Jugos frescos de frutas de temporada",
-          image: "https://images.pexels.com/photos/5947091/pexels-photo-5947091.jpeg",
-          variations: [{ id: 112, name: "Vaso", price: 2500 }]
         }
       ]
     }
