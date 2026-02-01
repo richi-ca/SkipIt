@@ -58,9 +58,15 @@ const EventForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: Reac
                     </div>
 
                     {/* Fila 2 */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Ubicación</label>
-                        <input name="location" type="text" defaultValue={item?.location} required className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500" placeholder="Lugar del evento" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Ubicación</label>
+                            <input name="location" type="text" defaultValue={item?.location} required className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500" placeholder="Lugar del evento" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo</label>
+                            <input name="type" type="text" defaultValue={item?.type} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500" placeholder="Tipo de evento" />
+                        </div>
                     </div>
 
                     {/* Fila 3 */}
@@ -166,6 +172,7 @@ export default function EventsMaintainer() {
             columns={[
                 { key: 'id', label: 'ID' },
                 { key: 'name', label: 'Nombre' },
+                { key: 'type', label: 'Tipo' },
                 // Hidden Month Year Column for Grouping
                 { key: 'month_year_sort', label: 'Month Group', visible: false },
                 { key: 'iso_date', label: 'Fecha' },

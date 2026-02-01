@@ -32,11 +32,12 @@ def reset_db():
         sys.path.append(os.getcwd()) # Ensure backend dir is in path
         
         # Mapping filename with hyphens to module
-        module_name = 'create-and-populate-db'
-        if module_name not in sys.modules:
-            populate_script = __import__(module_name)
-        else:
-            populate_script = sys.modules[module_name]
+        import importlib.util
+        file_path = os.path.join(os.getcwd(), 'create-and-populate-db.py')
+        spec = importlib.util.spec_from_file_location("create_and_populate_db", file_path)
+        populate_script = importlib.util.module_from_spec(spec)
+        sys.modules["create_and_populate_db"] = populate_script
+        spec.loader.exec_module(populate_script)
 
         # Using db.drop_all() and create_all() within current context
         db.drop_all()

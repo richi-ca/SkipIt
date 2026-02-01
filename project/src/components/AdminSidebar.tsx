@@ -33,7 +33,7 @@ export default function AdminSidebar() {
         // Better to use fetch directly or the hook if available, but here we can import baseFetch if this file was in a context that allows it.
         // AdminSidebar is a component. Let's assume we can fetch.
         const token = localStorage.getItem('token');
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/reset-db`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/reset-db`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

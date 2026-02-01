@@ -23,9 +23,9 @@ def seed_data():
     # --- 0. Crear Bloques de Contenido (CMS) ---
     print("Creando contenidos CMS...")
     cms_blocks = [
-        ContentBlock(key='quienes_somos', content='Somos SkipIT, la plataforma que revoluciona la forma de disfrutar eventos.'),
+        ContentBlock(key='quienes_somos', content='Somos SkipIT, la plataforma que revoluciona la forma de disfrutar eventos. Creamos la solución perfecta para que pases más tiempo bailando y menos tiempo haciendo fila.'),
         ContentBlock(key='mision', content='Nuestra misión es eliminar las filas y maximizar la diversión.'),
-        ContentBlock(key='vision', content='Ser la plataforma líder global en gestión de experiencia en eventos.')
+        ContentBlock(key='vision', content='Convertirnos en un ícono de la entretención moderna, inspirando una nueva forma de disfrutar los eventos masivos: sin esperas, con menos filas, y creando momentos inolvidables.')
     ]
     db.session.add_all(cms_blocks)
 

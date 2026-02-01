@@ -67,17 +67,17 @@ export const siteContent: SiteContent = {
       {
         stepNumber: 1,
         title: "Precompra",
-        description: "Elige tu evento y tus tragos favoritos desde tu celular."
+        description: "Selecciona el evento y precompra tus tragos desde cualquier lugar y con todo tipo de dispositivo."
       },
       {
         stepNumber: 2,
         title: "Recibe tu QR",
-        description: "Obtén un código único por cada compra realizada."
+        description: "Una vez confirmada la compra, descarga el código QR en tu celular, el cual también podrás verlo desde tu perfil de usuario."
       },
       {
         stepNumber: 3,
         title: "Canjea",
-        description: "Muestra tu QR en la barra y recibe tu pedido al instante."
+        description: "Llega al evento, muestra tu QR en la barra y recibe tus tragos. ¡Sin filas, con menos esperas!"
       }
     ]
   }
