@@ -15,8 +15,9 @@ def get_events():
     if request.args.get('public', '').lower() == 'true':
         query = query.filter(
             Event.is_active == True,
-            or_(Event.valid_from == None, Event.valid_from <= today),
-            or_(Event.valid_until == None, Event.valid_until >= today)
+            # valid_from/until filtering removed, relies on is_active for logical elimination
+            # or_(Event.valid_from == None, Event.valid_from <= today),
+            # or_(Event.valid_until == None, Event.valid_until >= today)
         )
 
     # Type Filter
@@ -72,7 +73,8 @@ def get_events():
 def get_featured_events():
     today = date.today()
     events = Event.query.filter(
-        Event.is_featured == True
+        Event.is_featured == True,
+        Event.is_active == True
     ).all()
     return jsonify([e.to_dict() for e in events])
 
@@ -105,13 +107,7 @@ def create_event():
         end_t_str = data['end_time'].split('T')[-1]
         end_time = time.fromisoformat(end_t_str)
 
-        valid_from = None
-        if 'valid_from' in data and data['valid_from']:
-             valid_from = datetime.fromisoformat(data['valid_from'].split('T')[0]).date()
-
-        valid_until = None
-        if 'valid_until' in data and data['valid_until']:
-             valid_until = datetime.fromisoformat(data['valid_until'].split('T')[0]).date()
+        # valid_from and valid_until removed parsing
 
         new_event = Event(
             menu_id=data.get('menu_id'),
@@ -128,8 +124,7 @@ def create_event():
             is_featured=data.get('is_featured', False),
             is_active=data.get('is_active', True),
             carousel_order=data.get('carousel_order'),
-            valid_from=valid_from,
-            valid_until=valid_until
+            # valid_from and valid_until removed
         )
         
         db.session.add(new_event)
@@ -173,13 +168,7 @@ def update_event(id):
              t_str = data['end_time'].split('T')[-1]
              event.end_time = time.fromisoformat(t_str)
              
-        if 'valid_from' in data:
-            val = data['valid_from']
-            event.valid_from = datetime.fromisoformat(val.split('T')[0]).date() if val else None
-
-        if 'valid_until' in data:
-            val = data['valid_until']
-            event.valid_until = datetime.fromisoformat(val.split('T')[0]).date() if val else None
+        # valid_from and valid_until updates removed
 
         db.session.commit()
         return jsonify(event.to_dict()), 200

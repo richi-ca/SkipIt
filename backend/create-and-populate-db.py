@@ -24,7 +24,7 @@ def seed_data():
     print("Creando contenidos CMS...")
     cms_blocks = [
         ContentBlock(key='quienes_somos', content='Somos SkipIT, la plataforma que revoluciona la forma de disfrutar eventos. Creamos la solución perfecta para que pases más tiempo bailando y menos tiempo haciendo fila.'),
-        ContentBlock(key='mision', content='Nuestra misión es eliminar las filas y maximizar la diversión.'),
+        ContentBlock(key='mision', content='Disminuir el tiempo de espera para canjear tragos en eventos, ofreciendo una experiencia rápida, fluida y segura.'),
         ContentBlock(key='vision', content='Convertirnos en un ícono de la entretención moderna, inspirando una nueva forma de disfrutar los eventos masivos: sin esperas, con menos filas, y creando momentos inolvidables.')
     ]
     db.session.add_all(cms_blocks)
@@ -133,8 +133,7 @@ def seed_data():
             is_featured=ev["is_featured"],
             carousel_order=ev["carousel_order"],
             image_url=ev["image_url"],
-            valid_from=event_date - timedelta(days=30),
-            valid_until=event_date + timedelta(days=1),
+            # valid_from and valid_until removed
             created_at=datetime.now()
         )
         db.session.add(nuevo_evento)

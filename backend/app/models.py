@@ -145,8 +145,7 @@ class Event(db.Model):
     is_featured = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     carousel_order = db.Column(db.Integer, nullable=True)
-    valid_from = db.Column(db.Date, nullable=True)
-    valid_until = db.Column(db.Date, nullable=True)
+    # valid_from and valid_until removed
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     
     # Relationship to Menu (Unidirectional from Event -> Menu as per basic requirements, bidirectional implied by foreign key)
@@ -169,8 +168,8 @@ class Event(db.Model):
             'is_featured': self.is_featured,
             'is_active': self.is_active,
             'carousel_order': self.carousel_order,
-            'valid_from': self.valid_from.isoformat() if self.valid_from else None,
-            'valid_until': self.valid_until.isoformat() if self.valid_until else None,
+            # 'valid_from' removed
+            # 'valid_until' removed
             'created_at': self.created_at.isoformat() if self.created_at else None
         } 
 
