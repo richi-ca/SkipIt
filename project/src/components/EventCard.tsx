@@ -21,6 +21,11 @@ export default function EventCard({ event, onSelect }: EventCardProps) {
     year: 'numeric'
   });
 
+  const formatTime = (timeStr?: string) => {
+    if (!timeStr) return '';
+    return timeStr.substring(0, 5);
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col">
       <div className="relative h-48 overflow-hidden shrink-0">
@@ -62,7 +67,7 @@ export default function EventCard({ event, onSelect }: EventCardProps) {
           </div>
           <div className="flex items-center text-gray-600">
             <Clock className="w-4 h-4 mr-2 shrink-0" />
-            <span className="text-sm truncate">{event.startTime} - {event.endTime}</span>
+            <span className="text-sm truncate">{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
           </div>
           <div className="flex items-center text-gray-600">
             <MapPin className="w-4 h-4 mr-2 shrink-0" />

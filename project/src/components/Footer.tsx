@@ -18,8 +18,8 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Link to="/">
-                  <img src={logoSkipIT} alt="Logo SkipIT" className="h-12" />
+                <Link to="/" className="block hover:opacity-90 transition-opacity">
+                  <img src={logoSkipIT} alt="Logo SkipIT" className="h-12 cursor-pointer" />
                 </Link>
               </div>
               <p className="text-gray-400">¡Sáltate la fila, y dedícate a disfrutar!</p>

@@ -329,7 +329,7 @@ function AppContent() {
                 element={
                   <HomePage
                     onSelectEvent={handleEventSelection}
-                    onOpenRegister={() => { }} // Register is now managed by PublicLayout
+                    onOpenRegister={() => setIsRegisterOpen(true)} // Register modal trigger
                   />
                 }
               />

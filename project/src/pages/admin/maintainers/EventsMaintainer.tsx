@@ -85,17 +85,7 @@ const EventForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: Reac
                         </div>
                     </div>
 
-                    {/* Fila 4 Valid From/Until */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Mostrar Desde</label>
-                            <input name="valid_from" type="date" defaultValue={item?.valid_from} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500 bg-white" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Mostrar Hasta</label>
-                            <input name="valid_until" type="date" defaultValue={item?.valid_until} className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500 bg-white" />
-                        </div>
-                    </div>
+                    {/* Fila 4 Valid From/Until removed */}
 
                     {/* Fila 5 Checkboxes */}
                     <div className="flex gap-8">
@@ -177,8 +167,7 @@ export default function EventsMaintainer() {
                 { key: 'month_year_sort', label: 'Month Group', visible: false },
                 { key: 'iso_date', label: 'Fecha' },
                 { key: 'location', label: 'Ubicación' },
-                { key: 'valid_from', label: 'Válido Desde' },
-                { key: 'valid_until', label: 'Válido Hasta' },
+                // valid_from and valid_until label removed
                 { key: 'is_featured', label: 'Destacado', type: 'boolean' },
                 { key: 'is_active', label: 'Activo', type: 'boolean' }
             ]}
@@ -193,16 +182,16 @@ export default function EventsMaintainer() {
                     const year = date.getFullYear();
                     return {
                         ...item,
-                        month_year_sort: `${monthCap} ${year}` // unique enough for our groups
+                        month_year_sort: `${year} - ${monthCap}` // Formato solicitado: Año/Mes (usamos guión para legibilidad)
                     };
                 });
             }}
             tableOptions={{
-                order: [[3, 'asc']], // Order by 'iso_date'
+                order: [[4, 'asc']], // Ordenar por fecha completa (iso_date es index 4) para orden cronológico
                 drawCallback: function (this: any, _settings: any) {
                     const api = this.api();
                     const rows = api.rows({ page: 'current' }).nodes();
-                    const groupColumnIndex = 2; // 'month_year_sort'
+                    const groupColumnIndex = 3; // 'month_year_sort' es la columna 3 (hidden)
                     let last: string | null = null;
 
                     api.column(groupColumnIndex, { page: 'current' })

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Calendar, Filter, ChevronLeft, ChevronRight, X, MapPin, Clock } from 'lucide-react';
+import { Search, Calendar, ChevronLeft, ChevronRight, X, MapPin, Clock } from 'lucide-react';
 import { baseFetch } from '../services/api';
 
 
@@ -18,8 +18,7 @@ interface BackendEvent {
   carousel_order?: number;
   menu_id?: number;
   overlay_title?: string;
-  valid_from?: string;
-  valid_until?: string;
+  // valid_from and valid_until removed
   is_active?: boolean;
 }
 
@@ -36,10 +35,7 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Estados del filtro
-  const [timeFilter, setTimeFilter] = useState('current'); // 'year', 'week', 'day', 'custom_range', 'all', 'current'
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all'); // 'featured', 'normal', 'all'
+  // Filters state removed as UI controls were removed
 
   // Modal State
   const [selectedEventForPopup, setSelectedEventForPopup] = useState<BackendEvent | null>(null);
@@ -51,7 +47,7 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
   // Initial Fetch & Filter Change
   useEffect(() => {
     fetchEvents();
-  }, [timeFilter, dateFrom, dateTo, typeFilter]);
+  }, []);
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -60,22 +56,8 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
       // Siempre pedimos eventos públicos (que ahora filtran is_active=True + validez feha)
       params.append('public', 'true');
 
-      // Lógica de Filtro de Tiempo
-      if (timeFilter === 'custom_range') {
-        if (dateFrom) params.append('date_from', dateFrom);
-        if (dateTo) params.append('date_to', dateTo);
-      } else if (timeFilter !== 'all' && timeFilter !== 'current') {
-        // year, week, day
-        params.append('time_filter', timeFilter);
-      }
-      // 'all' y 'current' no envían time_filter específico (backend retorna todo lo válido por defecto)
-      // Si quisiéramos diferenciar 'all' (histórico) de 'current' (válido), necesitaríamos otro param en backend.
-      // Por ahora ambos usan el filtro public base que es "Vigentes/Activos".
-
-      // Lógica de Filtro de Tipo
-      if (typeFilter !== 'all') {
-        params.append('filter_type', typeFilter);
-      }
+      // Filters removed, fetching all public (active) events by default
+      // 'public=true' is already added above
 
       const data = await baseFetch<BackendEvent[]>(`/catalog/events?${params.toString()}`);
       setEvents(data);
@@ -87,13 +69,7 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
     }
   };
 
-  const handleTimeFilterChange = (val: string) => {
-    setTimeFilter(val);
-    if (val !== 'custom_range') {
-      setDateFrom('');
-      setDateTo('');
-    }
-  };
+  // handleTimeFilterChange removed
 
   // Helper: Proximamente
   const isUpcoming = (dateStr?: string) => {
@@ -115,7 +91,7 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
   const getImageUrl = (url?: string) => {
     if (!url) return 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80';
     if (url.startsWith('http')) return url;
-    return `${import.meta.env.VITE_MEDIA_URL}/${url}`;
+    return `${import.meta.env.VITE_MEDIA_URL}/events/${url}`;
   };
 
   // Filtration client-side (Search Text)
@@ -138,73 +114,19 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
     <div className="min-h-screen bg-gray-50 pt-20 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 gap-4">
-          <div>
+          <div className="text-center md:text-left">
             <h1 className="text-3xl font-bold text-gray-900">Eventos</h1>
             <p className="text-gray-600 mt-1">Explora nuestros próximos eventos</p>
           </div>
         </div>
 
         {/* Filters Bar */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Filters removed (Periodo, Tipo de Evento) */}
 
-          {/* Período */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Período</label>
-            <select
-              value={timeFilter}
-              onChange={(e) => handleTimeFilterChange(e.target.value)}
-              className="w-full border-gray-200 rounded-lg text-sm focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="current">Todos los eventos vigentes</option>
-              <option value="year">Eventos del año</option>
-              <option value="week">Eventos de la semana</option>
-              <option value="day">Eventos del día</option>
-              <option value="custom_range">Buscar por fechas</option>
-              <option value="all">Todos los eventos</option>
-            </select>
-          </div>
-
-          {/* Date Range */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className={`block text-xs font-medium mb-1 ${timeFilter === 'custom_range' ? 'text-gray-700' : 'text-gray-400'}`}>Desde</label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                disabled={timeFilter !== 'custom_range'}
-                className={`w-full border-gray-200 rounded-lg text-sm focus:ring-purple-500 focus:border-purple-500 ${timeFilter !== 'custom_range' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
-              />
-            </div>
-            <div>
-              <label className={`block text-xs font-medium mb-1 ${timeFilter === 'custom_range' ? 'text-gray-700' : 'text-gray-400'}`}>Hasta</label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                disabled={timeFilter !== 'custom_range'}
-                className={`w-full border-gray-200 rounded-lg text-sm focus:ring-purple-500 focus:border-purple-500 ${timeFilter !== 'custom_range' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
-              />
-            </div>
-          </div>
-
-          {/* Tipo de Evento */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Tipo de Evento</label>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full border-gray-200 rounded-lg text-sm focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="all">Todos</option>
-              <option value="featured">Eventos Destacados</option>
-              <option value="normal">Eventos Normales</option>
-            </select>
-          </div>
-
-          {/* Search */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Buscar por nombre</label>
+        {/* Search */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-12">
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Buscar</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
@@ -237,14 +159,13 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
                 className={`group bg-white rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${event.is_featured ? 'ring-4 ring-yellow-400 ring-offset-2' : 'border border-gray-100'}`}
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <div className="absolute inset-0 bg-gray-200" />
                   <img
                     src={getImageUrl(event.image_url)}
                     alt={event.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                  <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
 
                   {/* Badges */}
                   <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
@@ -264,8 +185,17 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
                     <h3 className="font-bold text-lg mb-1 leading-tight">{event.name}</h3>
                     <div className="flex items-center text-xs opacity-90">
                       <Calendar size={12} className="mr-1" />
-                      {event.iso_date ? new Date(event.iso_date).toLocaleDateString() : 'Fecha por confirmar'}
+                      {event.iso_date ? (() => {
+                        const [y, m, d] = event.iso_date.split('T')[0].split('-');
+                        return new Date(Number(y), Number(m) - 1, Number(d)).toLocaleDateString();
+                      })() : 'Fecha por confirmar'}
                     </div>
+                    {event.location && (
+                      <div className="flex items-center text-xs opacity-90 mt-1">
+                        <MapPin size={12} className="mr-1" />
+                        {event.location}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -329,7 +259,10 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
                     <span className="text-xs font-bold uppercase tracking-wider">Fecha</span>
                   </div>
                   <p className="text-gray-900 font-semibold text-lg">
-                    {selectedEventForPopup.iso_date ? new Date(selectedEventForPopup.iso_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'TBA'}
+                    {selectedEventForPopup.iso_date ? (() => {
+                      const [y, m, d] = selectedEventForPopup.iso_date.split('T')[0].split('-');
+                      return new Date(Number(y), Number(m) - 1, Number(d)).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    })() : 'TBA'}
                   </p>
                 </div>
                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
@@ -393,7 +326,7 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
                   }}
                   className="px-6 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition shadow-sm"
                 >
-                  Ver Menú y Comprar
+                  Ver Carta
                 </button>
               )}
               {/* Optional: Add "Comprar" button here if desired later */}

@@ -41,7 +41,7 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
   // Estado para contenidos CMS (con defaults por si falla la carga o mientras carga)
   const [cmsContent, setCmsContent] = useState({
     quienes_somos: '<p>Somos SkipIT, la plataforma que revoluciona la forma de disfrutar eventos. Creamos la solución perfecta para que pases más tiempo bailando y menos tiempo haciendo fila.</p>',
-    mision: '<p>Nuestra misión es eliminar las filas y maximizar la diversión, ofreciendo una experiencia fluida y rápida.</p>',
+    mision: '<p>Disminuir el tiempo de espera para canjear tragos en eventos, ofreciendo una experiencia rápida, fluida y segura.</p>',
     vision: '<p>Ser la plataforma líder global en gestión de experiencia en eventos, reconocida por nuestra innovación y servicio.</p>'
   });
   const { about } = siteContent; // Aún usamos mockData para iconos y estructura general, pero texto vendrá de CMS.
@@ -174,10 +174,10 @@ export default function QuienesSomos({ onOpenRegister }: QuienesSomosProps) {
         <div className="text-center mt-16">
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-8 md:p-12 text-white">
             <h3 className="text-3xl font-bold mb-4">
-              ¿Listo para Saltarte la Fila?
+              ¿Estás listo para Saltarte la Fila?
             </h3>
             <p className="text-xl mb-8 text-purple-100">
-              Únete a miles de personas que ya disfrutan más y esperan menos
+              Únete a miles de personas que ya disfrutan el beneficio de precomprar y tener más tiempo para pasarlo bien.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
