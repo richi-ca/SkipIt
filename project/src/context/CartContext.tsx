@@ -2,14 +2,24 @@ import React, { createContext, useState, useContext, ReactNode } from 'react';
 // import { Order } from '../data/mockData'; // Deshabilitado temporalmente hasta resolver lógica de re-order
 
 // Define the shape of the context
+// Define the shape of the cart item
+export interface CartItemDetails {
+  id: number; // MenuProduct ID
+  name: string; // Product Name
+  variationName: string; // Variation Name or just product name
+  price: number;
+  image: string;
+  quantity: number;
+}
+
+// Define the shape of the context
 interface CartContextType {
-  cartItems: { [key: number]: number }; // key: variationId, value: quantity
-  addToCart: (variationId: number) => void;
+  cartItems: { [key: number]: CartItemDetails }; // key: MenuProduct ID
+  addToCart: (item: Omit<CartItemDetails, 'quantity'>) => void;
   removeFromCart: (variationId: number) => void;
   deleteProductFromCart: (variationId: number) => void;
   clearCart: () => void;
   getTotalItems: () => number;
-  // repeatOrder: (orderItems: Order['items']) => void; // Deshabilitado temporalmente
 }
 
 // Create the context
@@ -17,17 +27,26 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 // Create the provider component
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cartItems, setCartItems] = useState<{ [key: number]: number }>({});
+  const [cartItems, setCartItems] = useState<{ [key: number]: CartItemDetails }>({});
 
-  const addToCart = (variationId: number) => {
-    setCartItems(prev => ({ ...prev, [variationId]: (prev[variationId] || 0) + 1 }));
+  const addToCart = (item: Omit<CartItemDetails, 'quantity'>) => {
+    setCartItems(prev => {
+      const existing = prev[item.id];
+      if (existing) {
+        return { ...prev, [item.id]: { ...existing, quantity: existing.quantity + 1 } };
+      }
+      return { ...prev, [item.id]: { ...item, quantity: 1 } };
+    });
   };
 
   const removeFromCart = (variationId: number) => {
     setCartItems(prev => {
+      const existing = prev[variationId];
+      if (!existing) return prev;
+
       const newItems = { ...prev };
-      if (newItems[variationId] > 1) {
-        newItems[variationId]--;
+      if (existing.quantity > 1) {
+        newItems[variationId] = { ...existing, quantity: existing.quantity - 1 };
       } else {
         delete newItems[variationId];
       }
@@ -48,7 +67,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const getTotalItems = () => {
-    return Object.values(cartItems).reduce((sum, count) => sum + count, 0);
+    return Object.values(cartItems).reduce((sum, item) => sum + item.quantity, 0);
   };
 
   /* 

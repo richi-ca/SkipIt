@@ -181,20 +181,48 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
                     )}
                   </div>
 
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <h3 className="font-bold text-lg mb-1 leading-tight">{event.name}</h3>
-                    <div className="flex items-center text-xs opacity-90">
-                      <Calendar size={12} className="mr-1" />
-                      {event.iso_date ? (() => {
-                        const [y, m, d] = event.iso_date.split('T')[0].split('-');
-                        return new Date(Number(y), Number(m) - 1, Number(d)).toLocaleDateString();
-                      })() : 'Fecha por confirmar'}
-                    </div>
-                    {event.location && (
-                      <div className="flex items-center text-xs opacity-90 mt-1">
-                        <MapPin size={12} className="mr-1" />
-                        {event.location}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white flex justify-between items-end">
+                    <div className="flex-1 mr-2">
+                      <h3 className="font-bold text-lg mb-1 leading-tight">{event.name}</h3>
+                      <div className="flex items-center text-xs opacity-90">
+                        <Calendar size={12} className="mr-1" />
+                        {event.iso_date ? (() => {
+                          const [y, m, d] = event.iso_date.split('T')[0].split('-');
+                          return new Date(Number(y), Number(m) - 1, Number(d)).toLocaleDateString();
+                        })() : 'Fecha por confirmar'}
                       </div>
+                      {event.location && (
+                        <div className="flex items-center text-xs opacity-90 mt-1">
+                          <MapPin size={12} className="mr-1" />
+                          {event.location}
+                        </div>
+                      )}
+                    </div>
+                    {onSelectEvent && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const mappedEvent: Event = {
+                            id: event.id,
+                            name: event.name,
+                            overlayTitle: event.overlay_title,
+                            isoDate: event.iso_date,
+                            startTime: event.start_time,
+                            endTime: event.end_time,
+                            location: event.location,
+                            image: getImageUrl(event.image_url),
+                            rating: event.rating,
+                            type: event.type,
+                            isFeatured: event.is_featured,
+                            carouselOrder: event.carousel_order,
+                            menuId: event.menu_id
+                          };
+                          onSelectEvent(mappedEvent);
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg transition-colors flex-shrink-0"
+                      >
+                        Ver Carta
+                      </button>
                     )}
                   </div>
                 </div>

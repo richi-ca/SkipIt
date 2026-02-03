@@ -12,9 +12,9 @@ interface DrinkMenuProps {
   onOpenCart: () => void;
 }
 
-export default function DrinkMenu({ 
-  eventId, 
-  onClose, 
+export default function DrinkMenu({
+  eventId,
+  onClose,
   onOpenCart
 }: DrinkMenuProps) {
   const { cartItems, addToCart, removeFromCart, getTotalItems } = useCart();
@@ -94,25 +94,25 @@ export default function DrinkMenu({
               <h3 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-purple-200">
                 {category.name}
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {category.products.map(product => (
                   <div key={product.id} className="bg-gray-50 rounded-xl p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-start space-x-4">
-                      <img 
-                        src={product.image} 
+                      <img
+                        src={product.image}
                         alt={product.name}
                         className="w-20 h-20 rounded-lg object-cover shrink-0"
                       />
-                      
+
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-gray-900 truncate">{product.name}</h4>
                         <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
-                        
+
                         {/* Renderizado de Variaciones */}
                         <div className="space-y-2">
                           {product.variations.map(variation => {
-                            const count = cartItems[variation.id] || 0;
+                            const count = cartItems[variation.id]?.quantity || 0;
                             return (
                               <div key={variation.id} className="flex items-center justify-between bg-white p-2 rounded-lg shadow-sm">
                                 <div className="flex flex-col">
@@ -132,7 +132,13 @@ export default function DrinkMenu({
                                       {count}
                                     </span>
                                     <button
-                                      onClick={() => addToCart(variation.id)}
+                                      onClick={() => addToCart({
+                                        id: variation.id,
+                                        name: product.name,
+                                        variationName: variation.name,
+                                        price: variation.price,
+                                        image: product.image
+                                      })}
                                       className="w-7 h-7 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors"
                                     >
                                       <Plus className="w-3 h-3" />
@@ -140,7 +146,13 @@ export default function DrinkMenu({
                                   </div>
                                 ) : (
                                   <button
-                                    onClick={() => addToCart(variation.id)}
+                                    onClick={() => addToCart({
+                                      id: variation.id,
+                                      name: product.name,
+                                      variationName: variation.name,
+                                      price: variation.price,
+                                      image: product.image
+                                    })}
                                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs font-bold py-1.5 px-3 rounded-full transition-all"
                                   >
                                     Agregar

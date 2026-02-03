@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import Order, OrderItem, OrderStatus, ProductVariation
+from app.models import Order, OrderItem, OrderStatus
 from datetime import datetime, time
 import uuid
 
@@ -73,9 +73,10 @@ def create_order():
             # Validation for each item could go here
             new_item = OrderItem(
                 order_id=order_id,
-                variation_id=item_data['variation_id'],
+                # variation_id -> product_id mapping if needed, but for now just storing what frontend sends
+                product_id=item_data.get('product_id'), # Assuming refactor
                 product_name=item_data['product_name'],
-                variation_name=item_data['variation_name'],
+                # variation_name removed or optional
                 quantity=item_data['quantity'],
                 price_at_purchase=item_data['price']
             )

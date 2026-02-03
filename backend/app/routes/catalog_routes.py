@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import Menu, Category, Product, ProductVariation
+from app.models import Menu, Category, Product, MenuProduct
 
 catalog_bp = Blueprint('catalog', __name__)
 
@@ -16,14 +16,111 @@ def create_menu():
     if not data or 'name' not in data:
         return jsonify({'error': 'Name is required'}), 400
     
-    new_menu = Menu(name=data['name'])
+    new_menu = Menu(
+        name=data['name'],
+        event_id=data.get('event_id')
+    )
+    db.session.add(new_menu)
+    db.session.commit()
     db.session.add(new_menu)
     db.session.commit()
     return jsonify(new_menu.to_dict()), 201
 
+@catalog_bp.route('/events/<int:event_id>/menu', methods=['GET'])
+def get_menu_by_event(event_id):
+    # Find the menu associated with this event
+    # Assuming one menu per event for now, or taking the latest/first
+    menu = Menu.query.filter_by(event_id=event_id).first()
+    
+    if not menu:
+        return jsonify({'error': 'Menu not found for this event'}), 404
+        
+    menu_dict = menu.to_dict()
+    
+    # Process products into hierarchal structure for DrinkMenu component
+    # Structure needed: { id, name, categories: [ { id, name, products: [ { ..., variations: [] } ] } ] }
+    # Since we removed variations, each MenuProduct acts as a product variant in the UI or we group them?
+    # The Generic Front End 'DrinkMenu' expects categories -> products -> variations.
+    # We need to map our flat MenuProducts list to this structure.
+    
+    # 1. Fetch MenuProducts sorted
+    menu_products = sorted(menu.menu_products, key=lambda x: x.display_order)
+    
+    # 2. Group by Category
+    categories_map = {}
+    
+    for mp in menu_products:
+        if not mp.active: continue
+        
+        prod = mp.product
+        if not prod: continue
+        
+        cat = prod.category
+        if not cat: 
+             # Fallback category
+             cat_id = 0
+             cat_name = "Otros"
+             cat_desc = ""
+        else:
+             cat_id = cat.id
+             cat_name = cat.name
+             cat_desc = cat.description
+             
+        if cat_id not in categories_map:
+            categories_map[cat_id] = {
+                'id': cat_id,
+                'name': cat_name,
+                'description': cat_desc,
+                'products': []
+            }
+            
+        # 3. Add Product to Category. 
+        # Since we removed 'variations' table, and now Product names include variants (e.g. "Cerveza 330ml"),
+        # We can simulate the structure: Product -> [Variation(Self)]
+        
+        product_entry = {
+            'id': prod.id,
+            'name': prod.name,
+            'description': prod.description,
+            'image': prod.image_url, 
+            'variations': [
+                {
+                    'id': mp.id, 
+                    'name': prod.name, 
+                    'price': float(mp.price) if mp.price is not None else float(prod.price)
+                }
+            ]
+        }
+        
+        categories_map[cat_id]['products'].append(product_entry)
+
+    # Convert map to list
+    categories_list = list(categories_map.values())
+    
+    return jsonify({
+        'id': menu.id,
+        'name': menu.name,
+        'categories': categories_list
+    })
+
 @catalog_bp.route('/menus/<int:id>', methods=['GET'])
 def get_menu(id):
     menu = Menu.query.get_or_404(id)
+    menu_dict = menu.to_dict()
+    # Add products explicitly sorted
+    products = sorted(menu.menu_products, key=lambda x: x.display_order)
+    menu_dict['products'] = [mp.to_dict() for mp in products]
+    return jsonify(menu_dict)
+
+@catalog_bp.route('/menus/<int:id>', methods=['PUT', 'PATCH'])
+def update_menu(id):
+    menu = Menu.query.get_or_404(id)
+    data = request.get_json()
+    
+    if 'name' in data: menu.name = data['name']
+    if 'event_id' in data: menu.event_id = data['event_id']
+    
+    db.session.commit()
     return jsonify(menu.to_dict())
 
 @catalog_bp.route('/menus/<int:id>', methods=['DELETE'])
@@ -32,6 +129,75 @@ def delete_menu(id):
     db.session.delete(menu)
     db.session.commit()
     return jsonify({'message': 'Menu deleted'})
+
+# --- Menu Products ---
+
+@catalog_bp.route('/menus/<int:id>/products', methods=['POST'])
+def add_product_to_menu(id):
+    menu = Menu.query.get_or_404(id)
+    data = request.get_json()
+    
+    if 'product_id' not in data:
+        return jsonify({'error': 'product_id is required'}), 400
+        
+    product = Product.query.get_or_404(data['product_id'])
+    
+    # Check if already exists
+    exists = MenuProduct.query.filter_by(menu_id=menu.id, product_id=product.id).first()
+    if exists:
+        return jsonify({'error': 'Product already in menu'}), 400
+
+    # Get max order
+    max_order = db.session.query(db.func.max(MenuProduct.display_order)).filter_by(menu_id=menu.id).scalar() or 0
+    
+    menu_prod = MenuProduct(
+        menu_id=menu.id,
+        product_id=product.id,
+        price=data.get('price', product.price), # Default to base price
+        display_order=max_order + 1,
+        active=True
+    )
+    
+    db.session.add(menu_prod)
+    db.session.commit()
+    return jsonify(menu_prod.to_dict()), 201
+
+@catalog_bp.route('/menu-products/<int:id>', methods=['PUT'])
+def update_menu_product(id):
+    mp = MenuProduct.query.get_or_404(id)
+    data = request.get_json()
+    
+    if 'price' in data: mp.price = data['price']
+    if 'active' in data: mp.active = data['active']
+    if 'display_order' in data: mp.display_order = data['display_order']
+    
+    db.session.commit()
+    return jsonify(mp.to_dict())
+
+@catalog_bp.route('/menu-products/<int:id>', methods=['DELETE'])
+def remove_product_from_menu(id):
+    mp = MenuProduct.query.get_or_404(id)
+    db.session.delete(mp)
+    db.session.commit()
+    return jsonify({'message': 'Product removed from menu'})
+
+@catalog_bp.route('/menus/<int:id>/reorder', methods=['POST'])
+def reorder_menu_products(id):
+    menu = Menu.query.get_or_404(id)
+    data = request.get_json()
+    # Expects list of { id: menu_product_id, display_order: int }
+    
+    if not isinstance(data, list):
+        return jsonify({'error': 'List expected'}), 400
+        
+    for item in data:
+        mp = MenuProduct.query.get(item['id'])
+        if mp and mp.menu_id == menu.id:
+            mp.display_order = item['display_order']
+            
+    db.session.commit()
+    return jsonify({'message': 'Order updated'})
+
 
 # --- Categories ---
 @catalog_bp.route('/categories', methods=['GET'])
@@ -45,10 +211,9 @@ def create_category():
     if not 'name' in data:
         return jsonify({'error': 'name is required'}), 400
     
-    display_order_val = data.get('display_order')
     new_category = Category(
         name=data['name'],
-        display_order=int(display_order_val) if display_order_val and str(display_order_val).strip() else None
+        description=data.get('description')
     )
     db.session.add(new_category)
     db.session.commit()
@@ -60,10 +225,7 @@ def update_category(id):
     data = request.get_json()
 
     if 'name' in data: category.name = data['name']
-    # menu_id logic removed
-    if 'display_order' in data: 
-        val = data['display_order']
-        category.display_order = int(val) if val and str(val).strip() else None
+    if 'description' in data: category.description = data['description']
 
     try:
         db.session.commit()
@@ -136,23 +298,4 @@ def delete_product(id):
     db.session.commit()
     return jsonify({'message': 'Product deleted'})
 
-# --- Variations ---
-@catalog_bp.route('/variations', methods=['POST'])
-def create_variation():
-    data = request.get_json()
-    required = ('product_id', 'name', 'price')
-    if not all(k in data for k in required):
-        return jsonify({'error': f'Missing fields: {required}'}), 400
 
-    if not Product.query.get(data['product_id']):
-        return jsonify({'error': 'Product not found'}), 404
-
-    new_variation = ProductVariation(
-        product_id=data['product_id'],
-        name=data['name'],
-        price=data['price'],
-        stock=data.get('stock')
-    )
-    db.session.add(new_variation)
-    db.session.commit()
-    return jsonify(new_variation.to_dict()), 201

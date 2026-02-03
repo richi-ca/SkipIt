@@ -2,7 +2,6 @@
 import GenericMaintainer from './GenericMaintainer';
 
 export default function CategoriesMaintainer() {
-    // No menús needed anymore
     return (
         <GenericMaintainer
             title="Mantenedor de Categorías"
@@ -15,7 +14,7 @@ export default function CategoriesMaintainer() {
             ]}
             fields={[
                 { key: 'name', label: 'Nombre de la Categoría', type: 'text', required: true },
-                { key: 'description', label: 'Descripción', type: 'textarea', required: true }
+                { key: 'description', label: 'Descripción', type: 'textarea', required: false }
             ]}
         />
     );

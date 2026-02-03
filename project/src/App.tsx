@@ -36,6 +36,7 @@ import ScannerDashboard from './pages/ScannerDashboard';
 import ScannerHistoryPage from './pages/ScannerHistoryPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import EventsMaintainer from './pages/admin/maintainers/EventsMaintainer';
+import MenusMaintainer from './pages/admin/maintainers/MenusMaintainer';
 import ProductsMaintainer from './pages/admin/maintainers/ProductsMaintainer';
 import CategoriesMaintainer from './pages/admin/maintainers/CategoriesMaintainer';
 import CMSPage from './pages/admin/cms/CMSPage';
@@ -344,6 +345,7 @@ function AppContent() {
               <Route element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="events" element={<EventsMaintainer />} />
+                <Route path="menus" element={<MenusMaintainer />} />
                 <Route path="categories" element={<CategoriesMaintainer />} />
                 <Route path="products" element={<ProductsMaintainer />} />
                 <Route path="sales" element={<div className="p-10 text-2xl text-gray-600">Ventas & Scanner</div>} />

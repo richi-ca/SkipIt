@@ -53,26 +53,64 @@ class Menu(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True) # Optional link to an event, or required? User said "associated to an event". Let's make it nullable to avoid circular issues during creation if needed, but intended to be populated.
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     
     # Relationships
-    # categories relationship removed
+    event = db.relationship('Event', backref='menus')
+    menu_products = db.relationship('MenuProduct', backref='menu', cascade='all, delete-orphan')
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
+            'event_id': self.event_id,
+            'event_name': self.event.name if self.event else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            # 'categories' removed
+            'products_count': len(self.menu_products)
         }
+
+class MenuProduct(db.Model):
+    __tablename__ = 'menu_products'
+
+    id = db.Column(db.Integer, primary_key=True)
+    menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    price = db.Column(db.Numeric(10, 2), nullable=True) # Price specific to this menu
+    display_order = db.Column(db.Integer, default=0)
+    active = db.Column(db.Boolean, default=True)
+
+    # Relationship to Product to get name/image
+    product = db.relationship('Product')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'menu_id': self.menu_id,
+            'product_id': self.product_id,
+            'product_name': self.product.name if self.product else 'Unknown',
+            'category_name': self.product.category.name if self.product and self.product.category else 'Sin Categoría',
+            'base_price': float(self.product.price) if self.product and self.product.price else 0,
+            'price': float(self.price) if self.price is not None else 0,
+            'display_order': self.display_order,
+            'active': self.active
+        }
+
 
 class Category(db.Model):
     __tablename__ = 'categories'
 
     id = db.Column(db.Integer, primary_key=True)
-    # menu_id relationship removed
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.Text, nullable=True)
+    # menu_id relationship removed from Category as it is now Menu -> MenuProduct -> Product -> Category (indirectly) or just Product -> Category.
+    # User didn't explicitly say remove menu_id from Category, but MenuProducts resolves mapping. 
+    # However, Products belong to Categories in the base catalog. 
+    # The previous instruction added menu_id to Category. This conflicts with new "Menu Product" model if we want categories to be generic. 
+    # Usually Categories are generic (Vodka, Beer) and don't belong to a Menu. 
+    # IF the user wants a Menu to have specific Categories, we keep it. 
+    # But usually "Menu" is just a list of products.
+    # Let's REMOVE menu_id from Category to make them global catalog categories again, as implied by "MenuProduct solves M:M between menu and products".
 
     # Relationships
     products = db.relationship('Product', backref='category', cascade='all, delete-orphan')
@@ -93,45 +131,26 @@ class Product(db.Model):
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.Text, nullable=True)
     image_url = db.Column(db.String, nullable=True)
-    price = db.Column(db.Numeric(10, 2), nullable=True)
+    price = db.Column(db.Numeric(10, 2), nullable=True) # Base price
 
-    # Relationships
-    variations = db.relationship('ProductVariation', backref='product', cascade='all, delete-orphan')
+    # menu_products relationship backref is in MenuProduct
 
     def to_dict(self):
         return {
             'id': self.id,
             'category_id': self.category_id,
+            'category_name': self.category.name if self.category else None,
             'name': self.name,
             'description': self.description,
             'image_url': self.image_url,
-            'price': float(self.price) if self.price else 0.0,
-            'variations': [v.to_dict() for v in self.variations]
-        }
-
-class ProductVariation(db.Model):
-    __tablename__ = 'product_variations'
-
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    name = db.Column(db.String, nullable=False)
-    price = db.Column(db.Numeric(10, 2), nullable=False)
-    stock = db.Column(db.Integer, nullable=True)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'product_id': self.product_id,
-            'name': self.name,
-            'price': float(self.price) if self.price else 0.0,
-            'stock': self.stock
+            'price': float(self.price) if self.price else 0.0
         }
 
 class Event(db.Model):
     __tablename__ = 'events'
 
     id = db.Column(db.Integer, primary_key=True)
-    menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'), nullable=True)
+    # menu_id removed
     name = db.Column(db.String, nullable=False)
     overlay_title = db.Column(db.String, nullable=True)
     iso_date = db.Column(db.Date, nullable=False)
@@ -139,22 +158,18 @@ class Event(db.Model):
     end_time = db.Column(db.Time, nullable=False)
     location = db.Column(db.String, nullable=False)
     image_url = db.Column(db.String, nullable=True)
-    # price removed
     rating = db.Column(db.Numeric(2, 1), nullable=True)
     type = db.Column(db.String, nullable=True)
     is_featured = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     carousel_order = db.Column(db.Integer, nullable=True)
-    # valid_from and valid_until removed
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     
-    # Relationship to Menu (Unidirectional from Event -> Menu as per basic requirements, bidirectional implied by foreign key)
-    menu = db.relationship('Menu', backref='events') 
+    # menus relationship defined in Menu
 
     def to_dict(self):
         return {
             'id': self.id,
-            'menu_id': self.menu_id,
             'name': self.name,
             'overlay_title': self.overlay_title,
             'iso_date': self.iso_date.isoformat() if self.iso_date else None,
@@ -208,9 +223,8 @@ class OrderItem(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.String, db.ForeignKey('orders.order_id'), nullable=False)
-    variation_id = db.Column(db.Integer, nullable=False) # Simplified relation
+    product_id = db.Column(db.Integer, nullable=False) # Relation to Product ID
     product_name = db.Column(db.String, nullable=False)
-    variation_name = db.Column(db.String, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     claimed = db.Column(db.Integer, default=0)
     price_at_purchase = db.Column(db.Numeric(10, 2), nullable=False)
@@ -219,9 +233,8 @@ class OrderItem(db.Model):
         return {
             'id': self.id,
             'order_id': self.order_id,
-            'variation_id': self.variation_id,
+            'product_id': self.product_id,
             'product_name': self.product_name,
-            'variation_name': self.variation_name,
             'quantity': self.quantity,
             'claimed': self.claimed,
             'price_at_purchase': float(self.price_at_purchase) if self.price_at_purchase else 0.0
@@ -238,7 +251,7 @@ class Promotion(db.Model):
     image_url = db.Column(db.String(2048), nullable=True)
     active = db.Column(db.Boolean, default=True)
     action_type = db.Column(db.String(50), default='NONE')
-    linked_variation_id = db.Column(db.Integer, db.ForeignKey('product_variations.id'), nullable=True)
+    linked_product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True)
 
     def to_dict(self):
         return {
@@ -251,7 +264,7 @@ class Promotion(db.Model):
             'image_url': self.image_url,
             'active': self.active,
             'action_type': self.action_type,
-            'linked_variation_id': self.linked_variation_id
+            'linked_product_id': self.linked_product_id
         }
 
 class Contest(db.Model):
@@ -266,7 +279,7 @@ class Contest(db.Model):
     active = db.Column(db.Boolean, default=True)
     action_type = db.Column(db.String(50), default='NONE')
     action_url = db.Column(db.String(2048), nullable=True)
-    linked_variation_id = db.Column(db.Integer, db.ForeignKey('product_variations.id'), nullable=True)
+    linked_product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True)
 
     def to_dict(self):
         return {
@@ -280,7 +293,7 @@ class Contest(db.Model):
             'active': self.active,
             'action_type': self.action_type,
             'action_url': self.action_url,
-            'linked_variation_id': self.linked_variation_id
+            'linked_product_id': self.linked_product_id
         }
 
 class SiteConfiguration(db.Model):

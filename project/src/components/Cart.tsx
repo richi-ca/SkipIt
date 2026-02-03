@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { X, ShoppingBag, QrCode, Plus, Minus, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import ConfirmationModal from './ConfirmationModal';
-import { menus } from '../data/mockData';
 
 interface CartProps {
   isOpen: boolean;
@@ -10,45 +9,15 @@ interface CartProps {
   onGenerateQR: () => void;
 }
 
-// Helper para buscar info del producto dado un variationId
-const getProductDetails = (variationId: number) => {
-  for (const menu of menus) {
-    for (const category of menu.categories) {
-      for (const product of category.products) {
-        const variation = product.variations.find(v => v.id === Number(variationId));
-        if (variation) {
-          return {
-            product,
-            variation
-          };
-        }
-      }
-    }
-  }
-  return null;
-};
-
 export default function Cart({ isOpen, onClose, onGenerateQR }: CartProps) {
   // 1. Todos los Hooks primero (Incondicionalmente)
   const { cartItems, addToCart, removeFromCart, deleteProductFromCart } = useCart();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
-  // 2. Cálculos memoizados (Incondicionalmente)
-  const enrichedCartItems = useMemo(() => {
-    return Object.entries(cartItems).map(([variationId, quantity]) => {
-      const details = getProductDetails(Number(variationId));
-      if (!details) return null;
-      return {
-        ...details,
-        quantity,
-        totalPrice: details.variation.price * quantity
-      };
-    }).filter((item): item is NonNullable<typeof item> => item !== null);
-  }, [cartItems]);
-
-  const total = enrichedCartItems.reduce((sum, item) => sum + item.totalPrice, 0);
-  const itemCount = enrichedCartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartList = useMemo(() => Object.values(cartItems), [cartItems]);
+  const total = cartList.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const itemCount = cartList.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleDeleteClick = (variationId: number) => {
     setItemToDelete(variationId);
@@ -99,7 +68,7 @@ export default function Cart({ isOpen, onClose, onGenerateQR }: CartProps) {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-            {enrichedCartItems.length === 0 ? (
+            {cartList.length === 0 ? (
               <div className="text-center py-12">
                 <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500 text-lg">Tu carrito está vacío</p>
@@ -107,39 +76,45 @@ export default function Cart({ isOpen, onClose, onGenerateQR }: CartProps) {
               </div>
             ) : (
               <div className="space-y-4">
-                {enrichedCartItems.map(({ product, variation, quantity }) => (
-                  <div key={variation.id} className="bg-gray-50 rounded-xl p-4">
+                {cartList.map((item) => (
+                  <div key={item.id} className="bg-gray-50 rounded-xl p-4">
                     <div className="flex items-start space-x-4">
-                      <img 
-                        src={product.image} 
-                        alt={product.name}
+                      <img
+                        src={item.image}
+                        alt={item.name}
                         className="w-12 h-12 rounded-lg object-cover shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-gray-900 truncate">{product.name}</h4>
-                        <p className="text-xs text-gray-500 mb-1">{variation.name}</p>
-                        <p className="text-sm font-bold text-purple-600">${variation.price.toLocaleString()}</p>
+                        <h4 className="font-bold text-gray-900 truncate">{item.name}</h4>
+                        <p className="text-xs text-gray-500 mb-1">{item.variationName}</p>
+                        <p className="text-sm font-bold text-purple-600">${item.price.toLocaleString()}</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => removeFromCart(variation.id)}
+                          onClick={() => removeFromCart(item.id)}
                           className="w-8 h-8 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full flex items-center justify-center transition-colors disabled:opacity-50"
-                          disabled={quantity <= 1}
+                          disabled={item.quantity <= 1}
                         >
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="font-bold text-lg min-w-[1.5rem] text-center">
-                          {quantity}
+                          {item.quantity}
                         </span>
                         <button
-                          onClick={() => addToCart(variation.id)}
+                          onClick={() => addToCart({
+                            id: item.id,
+                            name: item.name,
+                            variationName: item.variationName,
+                            price: item.price,
+                            image: item.image
+                          })}
                           className="w-8 h-8 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full flex items-center justify-center transition-colors"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
                       <button
-                        onClick={() => handleDeleteClick(variation.id)}
+                        onClick={() => handleDeleteClick(item.id)}
                         className="text-gray-400 hover:text-red-500 transition-colors p-1 ml-2"
                         aria-label="Eliminar producto"
                       >
@@ -153,7 +128,7 @@ export default function Cart({ isOpen, onClose, onGenerateQR }: CartProps) {
           </div>
 
           {/* Footer */}
-          {enrichedCartItems.length > 0 && (
+          {cartList.length > 0 && (
             <div className="border-t bg-gray-50 p-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xl font-bold text-gray-900">Total:</span>
@@ -161,7 +136,7 @@ export default function Cart({ isOpen, onClose, onGenerateQR }: CartProps) {
                   ${total.toLocaleString()}
                 </span>
               </div>
-              
+
               <button
                 onClick={onGenerateQR}
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
@@ -169,7 +144,7 @@ export default function Cart({ isOpen, onClose, onGenerateQR }: CartProps) {
                 <QrCode className="w-5 h-5" />
                 <span>Finalizar Compra</span>
               </button>
-              
+
               <p className="text-xs text-gray-500 text-center mt-3">
                 Una vez finalizada la compra, podrás ver tu QR en la sección de pedidos.
               </p>

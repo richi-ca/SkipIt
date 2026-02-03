@@ -22,7 +22,7 @@ export default function GenericMaintainer({
     title: string,
     itemTitle?: string,
     endpoint: string,
-    columns: { key: string, label: string, type?: string, visible?: boolean }[],
+    columns: { key: string, label: string, type?: string, visible?: boolean, render?: (row: any) => string }[],
     fields: { key: string, label: string, type: string, required?: boolean, options?: { value: any, label: string }[] }[],
     processData?: (data: any[]) => any[],
     tableOptions?: any,
@@ -93,6 +93,9 @@ export default function GenericMaintainer({
             title: col.label,
             visible: col.visible !== false,
             render: (data: any, _type: any, row: any) => {
+                if (col.render) {
+                    return col.render(row);
+                }
                 // Renderizado especial para booleanos (Toggle)
                 if (col.type === 'boolean' || typeof data === 'boolean') {
                     const boolValue = Boolean(data);

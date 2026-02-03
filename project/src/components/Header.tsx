@@ -79,7 +79,7 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
                     <button onClick={onOpenRegister} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-4 py-2 rounded-full transition-all duration-300 transform hover:scale-105">Regístrate</button>
                   </>
                 )}
-                {isAuthenticated && (
+                {(isAuthenticated || cartItemCount > 0) && (
                   <button onClick={onOpenCart} className="relative p-2 text-gray-700 hover:text-purple-600 transition-colors rounded-full hover:bg-purple-50">
                     <ShoppingCart className="w-6 h-6" />
                     {cartItemCount > 0 && (
@@ -89,18 +89,19 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
                 )}
               </div>
               <div className="lg:hidden flex items-center space-x-1">
-                {!isAuthenticated ? (
-                  <>
-                    <button onClick={onOpenLogin} className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors px-2 py-1 rounded-lg hover:bg-purple-50">Inicia Sesión</button>
-                    <button onClick={onOpenRegister} className="text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-3 py-1 rounded-full transition-all transform hover:scale-105">Regístrate</button>
-                  </>
-                ) : (
+                {(isAuthenticated || cartItemCount > 0) && (
                   <button onClick={onOpenCart} className="relative p-2 text-gray-700 hover:text-purple-600 transition-colors rounded-full hover:bg-purple-50">
                     <ShoppingCart className="w-6 h-6" />
                     {cartItemCount > 0 && (
                       <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-pink-600 text-white text-xs flex items-center justify-center">{cartItemCount}</span>
                     )}
                   </button>
+                )}
+                {!isAuthenticated && (
+                  <>
+                    <button onClick={onOpenLogin} className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors px-2 py-1 rounded-lg hover:bg-purple-50">Inicia Sesión</button>
+                    <button onClick={onOpenRegister} className="text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-3 py-1 rounded-full transition-all transform hover:scale-105">Regístrate</button>
+                  </>
                 )}
                 <MobileMenuButton onClick={() => setIsMobileMenuOpen(true)} />
               </div>

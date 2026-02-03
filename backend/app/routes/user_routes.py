@@ -18,12 +18,18 @@ def get_current_user():
     
     # Formato esperado: "Bearer dummy-jwt-token-for-<user_id>"
     try:
+        if ' ' not in auth_header:
+             return jsonify({'error': 'Invalid token format'}), 401
+        
         token_str = auth_header.split(' ')[1]
         prefix = "dummy-jwt-token-for-"
         if not token_str.startswith(prefix):
              return jsonify({'error': 'Invalid token format'}), 401
         
         user_id = token_str[len(prefix):]
+        # Clean potential whitespace or newlines if any
+        user_id = user_id.strip()
+
         user = User.query.get(user_id)
         
         if not user:
@@ -32,6 +38,60 @@ def get_current_user():
         return jsonify(user.to_dict())
     except IndexError:
         return jsonify({'error': 'Invalid token header'}), 401
+
+@user_bp.route('/me', methods=['PUT'])
+def update_current_user():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({'error': 'No token provided'}), 401
+    
+    try:
+        if ' ' not in auth_header:
+             return jsonify({'error': 'Invalid token format'}), 401
+
+        token_str = auth_header.split(' ')[1]
+        prefix = "dummy-jwt-token-for-"
+        if not token_str.startswith(prefix):
+             return jsonify({'error': 'Invalid token format'}), 401
+        
+        user_id = token_str[len(prefix):]
+        user_id = user_id.strip()
+
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        data = request.get_json()
+
+        if 'name' in data:
+            user.name = data['name']
+        if 'email' in data:
+            if data['email'] != user.email and User.query.filter_by(email=data['email']).first():
+                 return jsonify({'error': 'Email already registered'}), 409
+            user.email = data['email']
+        if 'phone' in data:
+            user.phone = data['phone']
+        if 'gender' in data:
+             try:
+                user.gender = Gender(data['gender']) if data['gender'] else None
+             except ValueError:
+                pass # Ignore invalid gender values or handle error
+        if 'dob' in data:
+            try:
+                # Handle YYYY-MM-DD or ISO format
+                if len(data['dob']) == 10:
+                    user.dob = datetime.strptime(data['dob'], '%Y-%m-%d')
+                else:
+                    user.dob = datetime.fromisoformat(data['dob'])
+            except:
+                pass # Ignore date errors for now
+
+        db.session.commit()
+        return jsonify(user.to_dict())
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @user_bp.route('/<string:id>', methods=['GET'])
 def get_user(id):

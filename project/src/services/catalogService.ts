@@ -12,12 +12,26 @@ export const catalogService = {
     return data.map(mapEventFromApi);
   },
 
-  getEventDetails: async (eventId: number): Promise<Event> => {
-    return baseFetch<Event>(`/catalog/events/${eventId}`);
+  getEventById: async (eventId: number): Promise<Event> => {
+    const data = await baseFetch<any>(`/catalog/events/${eventId}`);
+    return mapEventFromApi(data);
   },
 
   getMenuByEventId: async (eventId: number): Promise<Menu> => {
-    return baseFetch<Menu>(`/catalog/events/${eventId}/menu`);
+    const menu = await baseFetch<Menu>(`/catalog/events/${eventId}/menu`);
+    // Map images
+    if (menu && menu.categories) {
+      menu.categories.forEach(cat => {
+        cat.products.forEach(prod => {
+          if (prod.image && !prod.image.startsWith('http') && !prod.image.startsWith('data:')) {
+            prod.image = `${MEDIA_BASE_URL}products/${prod.image}`;
+          } else if (!prod.image) {
+            prod.image = 'https://images.unsplash.com/photo-1514362545857-3bc16549766b?auto=format&fit=crop&w=400&q=80'; // Fallback
+          }
+        });
+      });
+    }
+    return menu;
   },
 
   getMenuById: async (menuId: number): Promise<Menu> => {
