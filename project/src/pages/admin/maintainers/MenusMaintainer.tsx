@@ -103,70 +103,131 @@ const MenuForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: React
         }
     };
 
-    // Handle Reorder
-    const handleReorder = async (mpId: number, direction: 'up' | 'down') => {
-        // Find current product info
+    // Handle Reorder Product
+    const handleReorderProduct = async (mpId: number, direction: 'up' | 'down') => {
         const mpIndex = menuProducts.findIndex(p => p.id === mpId);
         if (mpIndex === -1) return;
         const mp = menuProducts[mpIndex];
         const category = mp.category_name;
 
-        // Get all products in this category, sorted by display_order
+        // items in this category
         const itemsByCategory = menuProducts
             .filter(p => p.category_name === category)
-            .sort((a, b) => a.display_order - b.display_order);
+            .sort((a, b) => a.product_display_order - b.product_display_order);
 
         const indexInCategory = itemsByCategory.findIndex(p => p.id === mpId);
 
         if (direction === 'up' && indexInCategory > 0) {
             const prevItem = itemsByCategory[indexInCategory - 1];
-            // Swap display orders
-            const tempOrder = prevItem.display_order;
-            prevItem.display_order = mp.display_order;
-            mp.display_order = tempOrder;
+            // Swap product_display_order
+            const temp = prevItem.product_display_order;
+            prevItem.product_display_order = mp.product_display_order;
+            mp.product_display_order = temp;
 
-            // Update local state with new orders
-            // We need to map over the FULL list and update these two items
-            const newMenuProducts = menuProducts.map(p => {
-                if (p.id === mp.id) return { ...p, display_order: mp.display_order };
-                if (p.id === prevItem.id) return { ...p, display_order: prevItem.display_order };
-                return p;
-            });
-            setMenuProducts(newMenuProducts);
-
-            // Send update to backend (could batch or send both)
-            // Sending batch reorder for simplicity or safe individual updates
-            await baseFetch(`/catalog/menus/${item.id}/reorder`, {
-                method: 'POST',
-                body: JSON.stringify([
-                    { id: mp.id, display_order: mp.display_order },
-                    { id: prevItem.id, display_order: prevItem.display_order }
-                ])
-            });
+            updateLocalAndBackend([mp, prevItem]);
 
         } else if (direction === 'down' && indexInCategory < itemsByCategory.length - 1) {
             const nextItem = itemsByCategory[indexInCategory + 1];
-            // Swap display orders
-            const tempOrder = nextItem.display_order;
-            nextItem.display_order = mp.display_order;
-            mp.display_order = tempOrder;
+            const temp = nextItem.product_display_order;
+            nextItem.product_display_order = mp.product_display_order;
+            mp.product_display_order = temp;
 
-            const newMenuProducts = menuProducts.map(p => {
-                if (p.id === mp.id) return { ...p, display_order: mp.display_order };
-                if (p.id === nextItem.id) return { ...p, display_order: nextItem.display_order };
-                return p;
-            });
-            setMenuProducts(newMenuProducts);
-
-            await baseFetch(`/catalog/menus/${item.id}/reorder`, {
-                method: 'POST',
-                body: JSON.stringify([
-                    { id: mp.id, display_order: mp.display_order },
-                    { id: nextItem.id, display_order: nextItem.display_order }
-                ])
-            });
+            updateLocalAndBackend([mp, nextItem]);
         }
     };
+
+    // Handle Reorder Category
+    const handleReorderCategory = async (categoryName: string, direction: 'up' | 'down') => {
+        // 1. Identify distinct categories and their current order (based on the first item found)
+        const categoriesOrder: { name: string, order: number }[] = [];
+        const seen = new Set();
+
+        // Ensure menuProducts is sorted by cat order first
+        const sortedProds = [...menuProducts].sort((a, b) => a.category_display_order - b.category_display_order);
+
+        sortedProds.forEach(p => {
+            if (!seen.has(p.category_name)) {
+                seen.add(p.category_name);
+                categoriesOrder.push({ name: p.category_name, order: p.category_display_order });
+            }
+        });
+
+        const catIndex = categoriesOrder.findIndex(c => c.name === categoryName);
+        if (catIndex === -1) return;
+
+        let targetCatName = '';
+        let currentCatObj = categoriesOrder[catIndex];
+        let targetCatObj: any = null;
+
+        if (direction === 'up' && catIndex > 0) {
+            targetCatObj = categoriesOrder[catIndex - 1];
+        } else if (direction === 'down' && catIndex < categoriesOrder.length - 1) {
+            targetCatObj = categoriesOrder[catIndex + 1];
+        }
+
+        if (!targetCatObj) return;
+
+        // Swap orders value
+        const temp = targetCatObj.order;
+        targetCatObj.order = currentCatObj.order;
+        currentCatObj.order = temp;
+
+        // Update ALL products belonging to these two categories
+        const updates: any[] = [];
+        const newMenuProducts = menuProducts.map(p => {
+            if (p.category_name === currentCatObj.name) {
+                const updated = { ...p, category_display_order: currentCatObj.order };
+                updates.push(updated);
+                return updated;
+            }
+            if (p.category_name === targetCatObj.name) {
+                const updated = { ...p, category_display_order: targetCatObj.order };
+                updates.push(updated);
+                return updated;
+            }
+            return p;
+        });
+
+        setMenuProducts(newMenuProducts);
+
+        // Send batch update
+        // We only need to send { id, category_display_order }
+        const payload = updates.map(u => ({ id: u.id, category_display_order: u.category_display_order }));
+
+        try {
+            await baseFetch(`/catalog/menus/${item.id}/reorder`, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            // toast.success("Categorías reordenadas");
+        } catch (e) {
+            console.error(e);
+            toast.error("Error al reordenar categorías");
+        }
+    };
+
+    const updateLocalAndBackend = async (modifiedItems: any[]) => {
+        const newMenuProducts = menuProducts.map(p => {
+            const mod = modifiedItems.find(m => m.id === p.id);
+            return mod ? mod : p;
+        });
+        setMenuProducts(newMenuProducts);
+
+        const payload = modifiedItems.map(m => ({
+            id: m.id,
+            product_display_order: m.product_display_order
+        }));
+
+        try {
+            await baseFetch(`/catalog/menus/${item.id}/reorder`, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+        } catch (e) {
+            console.error(e);
+            toast.error("Error al reordenar productos");
+        }
+    }
 
 
     // Helper: Group items by category and sort
@@ -179,19 +240,26 @@ const MenuForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: React
 
         // Group
         const grouped: Record<string, any[]> = {};
+        const catOrders: Record<string, number> = {};
+
         filtered.forEach(mp => {
             const cat = mp.category_name;
-            if (!grouped[cat]) grouped[cat] = [];
+            if (!grouped[cat]) {
+                grouped[cat] = [];
+                catOrders[cat] = mp.category_display_order;
+            }
             grouped[cat].push(mp);
         });
 
-        // Sort items inside groups by display_order
+        // Sort items inside groups by product_display_order
         Object.keys(grouped).forEach(cat => {
-            grouped[cat].sort((a, b) => a.display_order - b.display_order);
+            grouped[cat].sort((a, b) => a.product_display_order - b.product_display_order);
         });
 
-        // Return sorted categories? Or just keys
-        return Object.keys(grouped).sort().map(cat => ({
+        // Return sorted categories (keys)
+        const sortedKeys = Object.keys(grouped).sort((a, b) => catOrders[a] - catOrders[b]);
+
+        return sortedKeys.map(cat => ({
             category: cat,
             items: grouped[cat]
         }));
@@ -199,12 +267,18 @@ const MenuForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: React
 
     const groupedData = getGroupedProducts();
 
-    // Pagination Logic (Flattened list for pagination or Paginate Groups? The image shows "Mostrar 10 registros", likely rows)
-    // Flatten grouped data to respect pagination
+    // Pagination Logic.
     const flattenForPagination = () => {
         const flat: any[] = [];
-        groupedData.forEach(group => {
-            flat.push({ type: 'header', key: group.category, label: group.category.toUpperCase() }); // Header row
+        groupedData.forEach((group, groupIdx) => {
+            // Include rendering info for Header arrows
+            flat.push({
+                type: 'header',
+                key: group.category,
+                label: group.category.toUpperCase(),
+                isFirst: groupIdx === 0,
+                isLast: groupIdx === groupedData.length - 1
+            });
             group.items.forEach((item, idx) => {
                 flat.push({ type: 'item', data: item, visualIndex: idx + 1 });
             });
@@ -213,26 +287,31 @@ const MenuForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: React
     };
 
     const flatList = flattenForPagination();
-    // Filter out headers from count? Usually DataTables counts rows. Headers are extra. 
-    // Let's assume pagination counts Item Rows.
+    // Filter out headers from count
     const itemRows = flatList.filter(x => x.type === 'item');
     const totalItems = itemRows.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
     // Get visible items for current page
-    // Complicated part: Headers should appear if their items are visible.
-    // Simplification: Paginate the ITEMs, then inject headers.
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const currentItems = itemRows.slice(startIndex, endIndex);
 
     // Reconstruct list with headers for the current page items
+    // Since reordering categories is global, we need global context or just render the headers again locally.
     const visibleList: any[] = [];
-    let currentCat = '';
+    let lastCat = '';
+
+    // We need to find the correct header properties (isFirst, isLast) for the categories appearing here.
+    // Simplifying: we'll re-find the header info from flattenForPagination.
+
     currentItems.forEach(row => {
-        if (row.data.category_name !== currentCat) {
-            currentCat = row.data.category_name;
-            visibleList.push({ type: 'header', label: currentCat.toUpperCase(), key: currentCat });
+        const catName = row.data.category_name;
+        if (catName !== lastCat) {
+            lastCat = catName;
+            // Find header info
+            const headerInfo = flatList.find(x => x.type === 'header' && x.key === catName);
+            if (headerInfo) visibleList.push(headerInfo);
         }
         visibleList.push(row);
     });
@@ -410,11 +489,29 @@ const MenuForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: React
                             {visibleList.length === 0 ? (
                                 <div className="p-8 text-center text-gray-400 text-sm">No se encontraron datos</div>
                             ) : (
-                                visibleList.map((row, idx) => {
+                                visibleList.map((row) => {
                                     if (row.type === 'header') {
                                         return (
-                                            <div key={`header-${row.key}`} className="px-6 py-2 bg-gray-100 font-bold text-xs text-gray-700 uppercase tracking-wide">
-                                                {row.label}
+                                            <div key={`header-${row.key}`} className="px-6 py-2 bg-gray-100 flex justify-between items-center group">
+                                                <span className="font-bold text-xs text-gray-700 uppercase tracking-wide">{row.label}</span>
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        type="button"
+                                                        disabled={row.isFirst}
+                                                        onClick={() => handleReorderCategory(row.key, 'up')}
+                                                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    >
+                                                        <ArrowUp size={14} className="text-gray-600" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={row.isLast}
+                                                        onClick={() => handleReorderCategory(row.key, 'down')}
+                                                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    >
+                                                        <ArrowDown size={14} className="text-gray-600" />
+                                                    </button>
+                                                </div>
                                             </div>
                                         );
                                     }
@@ -449,8 +546,8 @@ const MenuForm = ({ item, onSubmit, onCancel }: { item: any, onSubmit: (e: React
                                                     <Trash2 size={16} />
                                                 </button>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <button type="button" onClick={() => handleReorder(mp.id, 'up')} className="text-gray-400 hover:text-purple-600"><ArrowUp size={14} /></button>
-                                                    <button type="button" onClick={() => handleReorder(mp.id, 'down')} className="text-gray-400 hover:text-purple-600"><ArrowDown size={14} /></button>
+                                                    <button type="button" onClick={() => handleReorderProduct(mp.id, 'up')} className="text-gray-400 hover:text-purple-600"><ArrowUp size={14} /></button>
+                                                    <button type="button" onClick={() => handleReorderProduct(mp.id, 'down')} className="text-gray-400 hover:text-purple-600"><ArrowDown size={14} /></button>
                                                 </div>
                                             </div>
                                         </div>

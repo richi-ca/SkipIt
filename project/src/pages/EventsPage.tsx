@@ -50,21 +50,30 @@ export default function EventsPage({ onSelectEvent }: EventsPageProps) {
   }, []);
 
   const fetchEvents = async () => {
+    console.log("EventsPage: Starting fetchEvents...");
     setLoading(true);
     try {
       const params = new URLSearchParams();
       // Siempre pedimos eventos públicos (que ahora filtran is_active=True + validez feha)
       params.append('public', 'true');
 
-      // Filters removed, fetching all public (active) events by default
-      // 'public=true' is already added above
-
+      console.log("EventsPage: Fetching from API...");
       const data = await baseFetch<BackendEvent[]>(`/catalog/events?${params.toString()}`);
-      setEvents(data);
+      console.log("EventsPage: Data received:", data);
+
+      if (Array.isArray(data)) {
+        setEvents(data);
+      } else {
+        console.error("EventsPage: Data is not an array:", data);
+        setEvents([]);
+      }
+
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching events:", error);
+      setEvents([]);
     } finally {
+      console.log("EventsPage: Loaging set to false");
       setLoading(false);
     }
   };

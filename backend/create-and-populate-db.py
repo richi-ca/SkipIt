@@ -30,12 +30,18 @@ def seed_data():
     ]
     db.session.add_all(cms_blocks)
 
+    from werkzeug.security import generate_password_hash
+    def hash_pw(pw): return generate_password_hash(pw)
+
     # --- 1. Crear Usuarios ---
     print("Creando usuarios...")
+    # Passwords set to "123" but hashed as requested
+    common_pass = hash_pw("123")
+    
     usuarios = [
-        User(id="cliente1", name="Usuario Cliente", email="cliente@skipit.com", password="password123", role=Role.user_cli, dob=date(2000, 1, 1), gender=Gender.M),
-        User(id="admin1", name="Super Admin", email="admin@skipit.com", password="adminpassword", role=Role.admin, has_priority_access=True),
-        User(id="operador1", name="Barra Operator", email="barra@skipit.com", password="barrapassword", role=Role.scanner)
+        User(name="Carla Cliente", email="carla@cliente.com", password=common_pass, role=Role.user_cli, dob=date(2000, 1, 1), gender=Gender.M, is_active=True),
+        User(name="Ana Admin", email="ana@admin.com", password=common_pass, role=Role.admin, is_active=True),
+        User(name="Oscar Operator", email="oscar@operador.com", password=common_pass, role=Role.scanner, is_active=True)
     ]
     db.session.add_all(usuarios)
 
@@ -209,7 +215,8 @@ def seed_data():
             menu_id=menu_evento_1.id,
             product_id=prod["id"],
             price=prod["price"], # Usar precio base
-            display_order=i + 1,
+            product_display_order=i + 1,
+            category_display_order=prod["category_id"], # Initial order by category ID
             active=True
         )
         db.session.add(menu_prod)

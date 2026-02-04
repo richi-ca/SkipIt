@@ -16,7 +16,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisible }: HeaderProps) {
-  const { getTotalItems } = useCart();
+  const { getTotalItems, clearCart } = useCart();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,10 +29,17 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
   };
 
   const confirmLogout = () => {
+    if (cartItemCount > 0) {
+      clearCart();
+    }
     logout();
     setIsLogoutConfirmOpen(false);
     navigate('/');
   };
+
+  const logoutMessage = cartItemCount > 0
+    ? "Tienes productos en tu carro de compras. Si cierras sesión, se vaciará el carro. ¿Estás seguro de que quieres cerrar sesión?"
+    : "¿Estás seguro de que quieres cerrar sesión?";
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `block text-gray-700 hover:text-purple-600 font-medium transition-colors px-3 py-2 rounded-lg hover:bg-purple-50 ${isActive ? 'text-purple-600 bg-purple-100' : ''
@@ -157,7 +164,7 @@ export default function Header({ onOpenLogin, onOpenRegister, onOpenCart, isVisi
         onClose={() => setIsLogoutConfirmOpen(false)}
         onConfirm={confirmLogout}
         title="Confirmar Cierre de Sesión"
-        message="¿Estás seguro de que quieres cerrar sesión?"
+        message={logoutMessage}
         confirmText="Cerrar Sesión"
       />
     </>

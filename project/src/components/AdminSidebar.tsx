@@ -12,7 +12,8 @@ import {
   Layers,
   Database,
   AlertTriangle,
-  BookOpen
+  BookOpen,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logoSkipIT from '../assets/images/Logo5.png'; // Ajustar ruta si es necesario
@@ -62,6 +63,7 @@ export default function AdminSidebar() {
     { to: '/admin/categories', icon: Layers, label: 'Categorías' },
     { to: '/admin/products', icon: Store, label: 'Productos' },
     { to: '/admin/menus', icon: BookOpen, label: 'Carta' },
+    { to: '/admin/users', icon: Users, label: 'Usuarios' },
     { to: '/admin/sales', icon: ShoppingBag, label: 'Ventas & Scanner' },
     { to: '/admin/marketing', icon: Tags, label: 'Marketing' },
     { to: '/admin/cms', icon: FileText, label: 'Contenidos (CMS)' },

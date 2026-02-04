@@ -46,57 +46,34 @@ export default function PaymentModal({ isOpen, onClose, onPaymentSuccess, totalA
             <p className="text-4xl font-bold text-gray-900">${totalAmount.toLocaleString()}</p>
           </div>
 
-          {/* Mock Payment Form */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
-            <div className="flex items-center">
-              <CreditCard className="w-6 h-6 text-gray-400 mr-3" />
-              <input 
-                id="cardNumber"
-                name="cardNumber"
-                type="text" 
-                placeholder="4922 0000 0000 0000" 
-                disabled 
-                className="w-full bg-gray-200 text-gray-500 rounded-md p-2 cursor-not-allowed"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <input 
-                id="cardExpiry"
-                name="cardExpiry"
-                type="text" 
-                placeholder="MM/YY" 
-                disabled 
-                className="w-full bg-gray-200 text-gray-500 rounded-md p-2 cursor-not-allowed"
-              />
-              <input 
-                id="cardCvc"
-                name="cardCvc"
-                type="text" 
-                placeholder="CVC" 
-                disabled 
-                className="w-full bg-gray-200 text-gray-500 rounded-md p-2 cursor-not-allowed"
-              />
+          {/* Webpay Redirection Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-4 mb-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <CreditCard className="w-6 h-6 text-blue-500" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">Redirección Bancaria</h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>Al confirmar, serás redirigido a <strong>Webpay</strong> para realizar el pago de forma segura.</p>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="mt-6">
             <button
-              onClick={handlePayment}
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-wait"
+              onClick={onPaymentSuccess}
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-full transition-all duration-300 flex items-center justify-center space-x-3"
             >
-              {isLoading ? (
-                <Loader className="w-6 h-6 animate-spin" />
-              ) : (
-                <Lock className="w-5 h-5" />
-              )}
-              <span>{isLoading ? 'Procesando Pago...' : `Pagar $${totalAmount.toLocaleString()}`}</span>
+              <Lock className="w-5 h-5" />
+              <span>Ir a Pagar ${totalAmount.toLocaleString()}</span>
             </button>
           </div>
 
-          <p className="text-xs text-gray-400 text-center mt-4">
-            Esto es una simulación. No se realizará ningún cargo real.
-          </p>
+          <div className="mt-4 flex justify-center">
+            <img src="https://www.transbank.cl/public/img/logo-webpay-plus.svg" alt="Webpay Plus" className="h-8 opacity-70" />
+          </div>
         </div>
       </div>
       <style>{`

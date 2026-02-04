@@ -43,8 +43,8 @@ def get_menu_by_event(event_id):
     # The Generic Front End 'DrinkMenu' expects categories -> products -> variations.
     # We need to map our flat MenuProducts list to this structure.
     
-    # 1. Fetch MenuProducts sorted
-    menu_products = sorted(menu.menu_products, key=lambda x: x.display_order)
+    # 1. Fetch MenuProducts sorted by category order then product order
+    menu_products = sorted(menu.menu_products, key=lambda x: (x.category_display_order, x.product_display_order))
     
     # 2. Group by Category
     categories_map = {}
@@ -94,7 +94,9 @@ def get_menu_by_event(event_id):
         
         categories_map[cat_id]['products'].append(product_entry)
 
-    # Convert map to list
+    # Convert map to list - Sorting of categories logic is implicit by the order of insertion if we iterate sorted products
+    # But dictionary iteration order is insertion order in py3.7+. Since we sorted menu_products by category_display_order first,
+    # the keys in categories_map should be added in that order effectively.
     categories_list = list(categories_map.values())
     
     return jsonify({
@@ -108,7 +110,7 @@ def get_menu(id):
     menu = Menu.query.get_or_404(id)
     menu_dict = menu.to_dict()
     # Add products explicitly sorted
-    products = sorted(menu.menu_products, key=lambda x: x.display_order)
+    products = sorted(menu.menu_products, key=lambda x: (x.category_display_order, x.product_display_order))
     menu_dict['products'] = [mp.to_dict() for mp in products]
     return jsonify(menu_dict)
 
@@ -147,14 +149,34 @@ def add_product_to_menu(id):
     if exists:
         return jsonify({'error': 'Product already in menu'}), 400
 
-    # Get max order
-    max_order = db.session.query(db.func.max(MenuProduct.display_order)).filter_by(menu_id=menu.id).scalar() or 0
+    # Determine sorting
+    # We need to find the category order logic. If new products are added, they likely go to the end of their category, 
+    # or the category goes to the end if new.
+    
+    # Determine Category Display Order
+    # Find existing products with same category in this menu
+    cat_id = product.category_id
+    
+    existing_in_cat = [mp for mp in menu.menu_products if mp.product and mp.product.category_id == cat_id]
+    
+    if existing_in_cat:
+        # Category already exists in menu, use its order
+        cat_order = existing_in_cat[0].category_display_order
+        # Find max product order in this category
+        max_prod_order = max([mp.product_display_order for mp in existing_in_cat]) if existing_in_cat else 0
+        prod_order = max_prod_order + 1
+    else:
+        # New category for this menu, put at end
+        max_cat_order = db.session.query(db.func.max(MenuProduct.category_display_order)).filter_by(menu_id=menu.id).scalar() or 0
+        cat_order = max_cat_order + 1
+        prod_order = 1
     
     menu_prod = MenuProduct(
         menu_id=menu.id,
         product_id=product.id,
         price=data.get('price', product.price), # Default to base price
-        display_order=max_order + 1,
+        category_display_order=cat_order,
+        product_display_order=prod_order,
         active=True
     )
     
@@ -169,7 +191,7 @@ def update_menu_product(id):
     
     if 'price' in data: mp.price = data['price']
     if 'active' in data: mp.active = data['active']
-    if 'display_order' in data: mp.display_order = data['display_order']
+    # Sorting managed via dedicated endpoint usually, but leaving safe update here
     
     db.session.commit()
     return jsonify(mp.to_dict())
@@ -185,7 +207,8 @@ def remove_product_from_menu(id):
 def reorder_menu_products(id):
     menu = Menu.query.get_or_404(id)
     data = request.get_json()
-    # Expects list of { id: menu_product_id, display_order: int }
+    # Expects list of { id: menu_product_id, product_display_order: int, category_display_order: int }
+    # Or simplified logic.
     
     if not isinstance(data, list):
         return jsonify({'error': 'List expected'}), 400
@@ -193,7 +216,18 @@ def reorder_menu_products(id):
     for item in data:
         mp = MenuProduct.query.get(item['id'])
         if mp and mp.menu_id == menu.id:
-            mp.display_order = item['display_order']
+            if 'product_display_order' in item:
+                mp.product_display_order = item['product_display_order']
+            if 'category_display_order' in item:
+                # Update this product's category order. 
+                # CRITICAL: We must update ALL products in this category for this menu to keep them together.
+                # However, the frontend might send ALL items updated.
+                # Or we logic it here.
+                # If the user says "Change Category Order", they imply moving the whole block.
+                # If we receive explicit category_display_order for one item, we should probably update peers.
+                # BUT, if the frontend sends the whole list with updated values, we just save them.
+                # Let's assume frontend sends updates for relevant items.
+                mp.category_display_order = item['category_display_order']
             
     db.session.commit()
     return jsonify({'message': 'Order updated'})

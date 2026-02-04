@@ -2,6 +2,7 @@ from . import db
 from sqlalchemy.sql import func
 import enum
 from datetime import datetime
+import uuid
 
 # Enums
 class Role(enum.Enum):
@@ -24,11 +25,11 @@ class OrderStatus(enum.Enum):
 class User(db.Model):
     __tablename__ = 'users'
     
-    id = db.Column(db.String, primary_key=True) # UUID
+    id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4())) # UUID created by DB/App default
     name = db.Column(db.String, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=True)
-    has_priority_access = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
     role = db.Column(db.Enum(Role), nullable=True)
     phone = db.Column(db.String, nullable=True)
     dob = db.Column(db.Date, nullable=True)
@@ -40,7 +41,7 @@ class User(db.Model):
             'id': self.id,
             'name': self.name,
             'email': self.email,
-            'has_priority_access': self.has_priority_access,
+            'is_active': self.is_active,
             'role': self.role.value if self.role else None,
             'phone': self.phone,
             'dob': self.dob.isoformat() if self.dob else None,
@@ -77,7 +78,8 @@ class MenuProduct(db.Model):
     menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     price = db.Column(db.Numeric(10, 2), nullable=True) # Price specific to this menu
-    display_order = db.Column(db.Integer, default=0)
+    product_display_order = db.Column(db.Integer, default=0)
+    category_display_order = db.Column(db.Integer, default=0)
     active = db.Column(db.Boolean, default=True)
 
     # Relationship to Product to get name/image
@@ -92,7 +94,8 @@ class MenuProduct(db.Model):
             'category_name': self.product.category.name if self.product and self.product.category else 'Sin Categoría',
             'base_price': float(self.product.price) if self.product and self.product.price else 0,
             'price': float(self.price) if self.price is not None else 0,
-            'display_order': self.display_order,
+            'product_display_order': self.product_display_order,
+            'category_display_order': self.category_display_order,
             'active': self.active
         }
 

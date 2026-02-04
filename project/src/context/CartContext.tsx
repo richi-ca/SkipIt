@@ -5,6 +5,8 @@ import React, { createContext, useState, useContext, ReactNode } from 'react';
 // Define the shape of the cart item
 export interface CartItemDetails {
   id: number; // MenuProduct ID
+  productId: number; // The underlying Product.id
+  eventId: number; // The Event ID
   name: string; // Product Name
   variationName: string; // Variation Name or just product name
   price: number;

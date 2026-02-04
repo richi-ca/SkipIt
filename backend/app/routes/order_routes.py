@@ -42,12 +42,33 @@ def get_order(id):
 
 @order_bp.route('/', methods=['POST'])
 def create_order():
+
+    #https://www.transbankdevelopers.cl/documentacion/como_empezar#como-empezar
+    #https://www.transbankdevelopers.cl/documentacion/como_empezar#codigos-de-comercio
+    #https://www.transbankdevelopers.cl/referencia/webpay
+
+    # Tipo de tarjeta   Detalle                        Resultado
+    #----------------   -----------------------------  ------------------------------
+    # VISA              4051885600446623
+    #                   CVV 123
+    #                   cualquier fecha de expiración  Genera transacciones aprobadas.
+    # AMEX              3700 0000 0002 032
+    #                   CVV 1234
+    #                   cualquier fecha de expiración  Genera transacciones aprobadas.
+    # MASTERCARD        5186 0595 5959 0568
+    #                   CVV 123
+    #                   cualquier fecha de expiración  Genera transacciones rechazadas.
+    # Redcompra         4051 8842 3993 7763            Genera transacciones aprobadas (para operaciones que permiten débito Redcompra y prepago)
+    # Redcompra         4511 3466 6003 7060            Genera transacciones aprobadas (para operaciones que permiten débito Redcompra y prepago)
+    # Redcompra         5186 0085 4123 3829            Genera transacciones rechazadas (para operaciones que permiten débito Redcompra y prepago)
+
     data = request.get_json()
     # Required: user_id, event_id, items (list)
     if not all(k in data for k in ('user_id', 'event_id', 'items', 'total')):
          return jsonify({'error': 'Missing required fields'}), 400
     
-    order_id = data.get('order_id', str(uuid.uuid4()))
+    # Webpay restriction: buy_order max 26 chars. Using shorter ID.
+    order_id = data.get('order_id', f"ORD-{uuid.uuid4().hex[:12]}")
     
     try:
         iso_date = datetime.now().date() # Default current date
@@ -86,5 +107,7 @@ def create_order():
         return jsonify(new_order.to_dict()), 201
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

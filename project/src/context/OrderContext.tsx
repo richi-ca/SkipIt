@@ -8,7 +8,7 @@ interface OrderContextType {
   activeQRs: { [orderId: string]: any[] };
   isLoading: boolean;
   error: string | null;
-  createOrder: (eventId: number, items: { variationId: number; quantity: number }[]) => Promise<Order>;
+  createOrder: (eventId: number, items: { product_id: number; product_name: string; quantity: number; price: number }[], total: number, userId: string) => Promise<Order>;
   claimItems: (orderId: string, itemsToClaim: { variationId: number; quantity: number }[]) => Promise<void>;
   claimFullOrder: (orderId: string) => Promise<void>;
   refreshOrders: () => Promise<void>;
@@ -30,7 +30,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       setOrders([]);
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const data = await orderService.getMyOrders();
@@ -49,13 +49,16 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     refreshOrders();
   }, [refreshOrders]);
 
-  const createOrder = async (eventId: number, items: { variationId: number; quantity: number }[]): Promise<Order> => {
-    setIsLoading(true);
-    setError(null);
+  const createOrder = async (eventId: number, items: { product_id: number; product_name: string; quantity: number; price: number }[], total: number, userId: string): Promise<Order> => {
     try {
+      setIsLoading(true);
+      setError(null);
+
       const request: CreateOrderRequest = {
-        eventId,
-        items
+        event_id: eventId,
+        items,
+        total,
+        user_id: userId
       };
       const newOrder = await orderService.createOrder(request);
       setOrders(prev => [newOrder, ...prev]); // Add to top of list
@@ -73,10 +76,10 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Call backend
       const updatedOrder = await orderService.claimOrder(orderId, itemsToClaim);
-      
+
       // Update local state
-      setOrders(prevOrders => 
-        prevOrders.map(order => 
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
           order.orderId === orderId ? updatedOrder : order
         )
       );
@@ -110,23 +113,23 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     if (!activeQRs[orderId]) return;
 
     setActiveQRs(prev => ({
-        ...prev,
-        [orderId]: prev[orderId].filter(qr => qr.orderNumber !== qrId)
+      ...prev,
+      [orderId]: prev[orderId].filter(qr => qr.orderNumber !== qrId)
     }));
   };
 
   return (
-    <OrderContext.Provider value={{ 
-      orders, 
-      activeQRs, 
-      isLoading, 
-      error, 
-      createOrder, 
-      claimItems, 
+    <OrderContext.Provider value={{
+      orders,
+      activeQRs,
+      isLoading,
+      error,
+      createOrder,
+      claimItems,
       claimFullOrder,
       refreshOrders,
-      storeActiveQRs, 
-      markQrAsUsed 
+      storeActiveQRs,
+      markQrAsUsed
     }}>
       {children}
     </OrderContext.Provider>

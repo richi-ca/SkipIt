@@ -31,7 +31,7 @@ export async function baseFetch<T>(endpoint: string, options: FetchOptions = {})
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
-    throw new Error(errorData.message || `Error: ${response.status}`);
+    throw new Error(errorData.error || errorData.message || `Error: ${response.status}`);
   }
 
   // If response is empty (like 204 No Content), return empty object as T

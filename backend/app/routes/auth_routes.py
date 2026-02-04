@@ -23,9 +23,14 @@ def login():
          return jsonify({'error': 'User not found'}), 404
 
     # En una app real, aquí se compararía el hash de la contraseña.
-    # Como el script de población guardó texto plano, comparamos directo por ahora (SOLO DEV).
-    if user.password != data['password']:
+    # Ahora usamos werkzeug para validar el hash
+    from werkzeug.security import check_password_hash
+    if not user.password or not check_password_hash(user.password, data['password']):
         return jsonify({'error': 'Invalid credentials'}), 401
+    
+    # Check if user is active
+    if not user.is_active:
+        return jsonify({'error': 'La cuenta está desactivada. Contacte al administrador.'}), 403
 
     # Generar Token (Dummy o JWT simple)
     token = "dummy-jwt-token-for-" + user.id # Simplificación para prototipo
@@ -69,16 +74,19 @@ def register():
             # Fallback or ignore
             pass
 
+    from werkzeug.security import generate_password_hash
+    hashed_password = generate_password_hash(data['password'])
+
     new_user = User(
-        id=str(uuid.uuid4()),
+        # id handled by model default
         name=data['name'],
         email=data['email'],
-        password=data['password'], # Nota: Debería hashearse en producción
+        password=hashed_password,
         phone=data.get('phone'),
         dob=dob_val,
         gender=gender_val,
         role=Role.user_cli,
-        has_priority_access=False
+        is_active=True
     )
 
     try:

@@ -72,16 +72,16 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onLogi
 
     switch (role) {
       case 'cliente':
-        email = 'cliente@skipit.com';
-        password = 'password123';
+        email = 'carla@cliente.com';
+        password = '123';
         break;
       case 'admin':
-        email = 'admin@skipit.com';
-        password = 'adminpassword';
+        email = 'ana@admin.com';
+        password = '123';
         break;
       case 'operador':
-        email = 'barra@skipit.com';
-        password = 'barrapassword';
+        email = 'oscar@operador.com';
+        password = '123';
         break;
     }
 

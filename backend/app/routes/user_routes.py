@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app import db
 from app.models import User, Role, Gender
 from datetime import datetime
+import uuid
 
 user_bp = Blueprint('users', __name__)
 
@@ -103,10 +104,12 @@ def create_user():
     data = request.get_json()
     
     # Validaciones básicas
-    if not data or not all(k in data for k in ('id', 'name', 'email')):
+    # ID is now optional (auto-generated)
+    if not data or not all(k in data for k in ('name', 'email')):
         return jsonify({'error': 'Missing required fields'}), 400
     
-    if User.query.get(data['id']):
+    # Check if ID is provided, if so check existence
+    if data.get('id') and User.query.get(data['id']):
         return jsonify({'error': 'User ID already exists'}), 409
         
     if User.query.filter_by(email=data['email']).first():
@@ -116,18 +119,35 @@ def create_user():
         # Conversión de enums y fechas
         role = Role(data.get('role')) if data.get('role') else None
         gender = Gender(data.get('gender')) if data.get('gender') else None
-        dob = datetime.fromisoformat(data['dob']) if data.get('dob') else None
+        
+        dob = None
+        if data.get('dob'):
+             try:
+                 # Handle YYYY-MM-DD or ISO format
+                 if len(data['dob']) == 10:
+                     dob = datetime.strptime(data['dob'], '%Y-%m-%d')
+                 else:
+                     dob = datetime.fromisoformat(data['dob'])
+             except:
+                 pass 
+
+        hashed_password = None
+        if data.get('password'):
+            from werkzeug.security import generate_password_hash
+            hashed_password = generate_password_hash(data.get('password'))
 
         new_user = User(
-            id=data['id'],
+            # id is handled by default=uuid.uuid4 in model if not provided
+            id=data.get('id'), # Optional: allow manually setting ID if needed, otherwise None triggers default
             name=data['name'],
             email=data['email'],
-            password=data.get('password'),
+            password=hashed_password,
             has_priority_access=data.get('has_priority_access', False),
             role=role,
             phone=data.get('phone'),
             dob=dob,
-            gender=gender
+            gender=gender,
+            is_active=data.get('is_active', True)
         )
         
         db.session.add(new_user)
@@ -163,7 +183,19 @@ def update_user(id):
         if 'gender' in data:
             user.gender = Gender(data['gender']) if data['gender'] else None
         if 'dob' in data:
-            user.dob = datetime.fromisoformat(data['dob']) if data['dob'] else None
+             try:
+                # Handle YYYY-MM-DD or ISO format
+                if len(data['dob']) == 10:
+                    user.dob = datetime.strptime(data['dob'], '%Y-%m-%d')
+                else:
+                    user.dob = datetime.fromisoformat(data['dob'])
+             except:
+                pass 
+        if 'password' in data and data['password']:
+            from werkzeug.security import generate_password_hash
+            user.password = generate_password_hash(data['password'])
+        if 'is_active' in data:
+            user.is_active = data['is_active']
 
         db.session.commit()
         return jsonify(user.to_dict())

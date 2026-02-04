@@ -43,6 +43,8 @@ def create_app():
 
     # Los prefijos son RELATIVOS al punto de montaje de la aplicación.
     # Si la app se monta en /backendskipit, entonces /api/users será /backendskipit/api/users
+    from .routes.webpay_routes import webpay_bp
+
     app.register_blueprint(main)
     app.register_blueprint(user_bp, url_prefix='/api/users')
     app.register_blueprint(catalog_bp, url_prefix='/api/catalog')
@@ -53,5 +55,6 @@ def create_app():
     app.register_blueprint(stats_bp, url_prefix='/api/stats')
     app.register_blueprint(media_bp, url_prefix='/media')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(webpay_bp, url_prefix='/api/webpay')
 
     return app

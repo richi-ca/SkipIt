@@ -39,7 +39,11 @@ import EventsMaintainer from './pages/admin/maintainers/EventsMaintainer';
 import MenusMaintainer from './pages/admin/maintainers/MenusMaintainer';
 import ProductsMaintainer from './pages/admin/maintainers/ProductsMaintainer';
 import CategoriesMaintainer from './pages/admin/maintainers/CategoriesMaintainer';
+import UsersMaintainer from './pages/admin/maintainers/UsersMaintainer';
 import CMSPage from './pages/admin/cms/CMSPage';
+import MockWebpay from './pages/MockWebpay';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailure from './pages/PaymentFailure';
 
 
 import { toast } from 'react-hot-toast';
@@ -98,6 +102,7 @@ function AppContent() {
   const { cartItems, clearCart } = useCart();
   const { user, isAuthenticated, setActionAfterLogin } = useAuth();
   const { createOrder, storeActiveQRs } = useOrders();
+  const navigate = useNavigate();
 
   // --- Global State (Age Verification) ---
   const [isAgeVerified, setIsAgeVerified] = useState(false);
@@ -189,10 +194,7 @@ function AppContent() {
 
   // --- Payment Handlers ---
   const calculateTotal = () => {
-    return Object.entries(cartItems).reduce((sum, [variationIdStr, quantity]) => {
-      const details = findProductByVariationId(Number(variationIdStr));
-      return details ? sum + (details.variation.price * quantity) : sum;
-    }, 0);
+    return Object.values(cartItems).reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
   // Exposed to PublicLayout via Context or Prop drilling could be complex.
@@ -210,52 +212,50 @@ function AppContent() {
     setIsPaymentModalOpen(true);
   }
 
+  const handleInitiatePayment = async () => {
+    if (!user) return;
+
+    if (!cartEvent && (!cartItems || Object.keys(cartItems).length === 0)) {
+      toast.error("El carrito está vacío o no tiene evento asociado.");
+      return;
+    }
+
+    const itemsPayload = Object.values(cartItems).map((item) => {
+      return {
+        product_id: item.productId,
+        product_name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      };
+    });
+
+    const targetEventId = cartEvent?.id || (Object.values(cartItems)[0]?.eventId) || events[0].id;
+    const total = calculateTotal();
+
+    try {
+      const createdOrder = await createOrder(targetEventId, itemsPayload, total, user.id);
+
+      setIsPaymentModalOpen(false);
+
+      if (createdOrder && createdOrder.orderId) {
+        navigate(`/mock-webpay?orderId=${createdOrder.orderId}&amount=${total}`);
+      } else {
+        toast.error("Error al iniciar pago: No se recibió ID de orden.");
+      }
+
+    } catch (error: any) {
+      console.error("Error al iniciar orden:", error);
+      toast.error(error.message || "Hubo un problema al procesar tu pedido.");
+    }
+  };
+
 
 
   // ... (imports anteriores)
 
   // Dentro de AppContent:
 
-  const handlePaymentSuccess = async () => {
-    if (!user) return;
 
-    // Si no hay evento asociado al carrito (caso raro), usar fallback o error
-    if (!cartEvent && (!cartItems || Object.keys(cartItems).length === 0)) {
-      toast.error("El carrito está vacío o no tiene evento asociado.");
-      return;
-    }
-
-    // Preparar payload para el backend
-    // Solo necesitamos variationId y quantity. El backend calcula precios y totales.
-    const itemsPayload = Object.entries(cartItems).map(([variationIdStr, quantity]) => ({
-      variationId: Number(variationIdStr),
-      quantity: quantity
-    }));
-
-    // Si por alguna razón cartEvent es null pero hay items (lógica legacy), intentamos recuperar el evento de mockData o fallamos
-    // Para esta etapa de integración, asumiremos que cartEvent está setead correctamente por la lógica de "Un Carrito = Un Evento"
-    const targetEventId = cartEvent?.id || events[0].id;
-
-    try {
-      // 1. Crear orden en el backend usando el Contexto
-      const createdOrder = await createOrder(targetEventId, itemsPayload);
-
-      // 2. Actualizar estado local
-      // Nota: createOrder ya actualiza el estado orders en el contexto
-      setSelectedOrder(createdOrder);
-
-      // 3. Limpiar y cerrar
-      clearCart();
-      setCartEvent(null);
-      setIsPaymentModalOpen(false);
-      setIsOrderTypeModalOpen(true); // Mostrar opciones de QR
-      toast.success("¡Pedido confirmado!");
-
-    } catch (error: any) {
-      console.error("Error al crear la orden:", error);
-      toast.error(error.message || "Hubo un problema al procesar tu pedido.");
-    }
-  };
 
   const handleCheckout = () => {
     if (!isAuthenticated || !user) {
@@ -338,6 +338,9 @@ function AppContent() {
               <Route path="/history" element={<OrderHistoryPage onManageOrder={(order) => { setSelectedOrder(order); setIsManageOrderModalOpen(true); }} />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/login" element={<LoginPageHandler onOpenLogin={() => { }} />} />
+              <Route path="/mock-webpay" element={<MockWebpay />} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/failure" element={<PaymentFailure />} />
             </Route>
 
             {/* === RUTAS PRIVADAS (Admin) === */}
@@ -347,6 +350,7 @@ function AppContent() {
                 <Route path="events" element={<EventsMaintainer />} />
                 <Route path="menus" element={<MenusMaintainer />} />
                 <Route path="categories" element={<CategoriesMaintainer />} />
+                <Route path="users" element={<UsersMaintainer />} />
                 <Route path="products" element={<ProductsMaintainer />} />
                 <Route path="sales" element={<div className="p-10 text-2xl text-gray-600">Ventas & Scanner</div>} />
                 <Route path="marketing" element={<div className="p-10 text-2xl text-gray-600">Marketing</div>} />
@@ -378,7 +382,7 @@ function AppContent() {
           <PaymentModal
             isOpen={isPaymentModalOpen}
             onClose={() => setIsPaymentModalOpen(false)}
-            onPaymentSuccess={handlePaymentSuccess}
+            onPaymentSuccess={handleInitiatePayment}
             totalAmount={paymentAmount}
           />
 

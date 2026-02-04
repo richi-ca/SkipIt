@@ -134,6 +134,8 @@ export default function DrinkMenu({
                                     <button
                                       onClick={() => addToCart({
                                         id: variation.id,
+                                        productId: product.id,
+                                        eventId: eventId,
                                         name: product.name,
                                         variationName: variation.name,
                                         price: variation.price,
@@ -148,6 +150,8 @@ export default function DrinkMenu({
                                   <button
                                     onClick={() => addToCart({
                                       id: variation.id,
+                                      productId: product.id,
+                                      eventId: eventId,
                                       name: product.name,
                                       variationName: variation.name,
                                       price: variation.price,
