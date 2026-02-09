@@ -83,7 +83,7 @@ function ClientGuard({ children }: { children: React.ReactElement }) {
 function App() {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-      <Router>
+      <Router basename="/skipit">
         <ScrollToTop />
         <AuthProvider>
           <CartProvider>

@@ -11,4 +11,5 @@ export default defineConfig({
     host: true,
     allowedHosts: ['trycloudflare.com'],
   },
+  base: '/skipit/'
 });
